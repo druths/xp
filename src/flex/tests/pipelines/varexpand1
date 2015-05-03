@@ -1,0 +1,32 @@
+
+X=hello
+
+Y=${X}_world.txt
+
+VAR1=test
+VAR2=varexpand1_${VAR1}.txt
+
+basic_expansion:
+	code.sh:
+		touch $Y
+
+basic_expansion2:
+	code.sh:
+		touch ${VAR2}
+
+basic_pipeline_expansion:
+	code.sh:
+		touch $PLN(pln_expand1.txt)
+
+nested_pipeline_expansion:
+	code.sh:
+		touch $PLN($X.txt)
+
+python_pipeline_expansion:
+	export:
+		fname=pytest
+	code.py:
+		import os
+		fh = open('$PLN($fname.dat)','w')
+		fh.write('hello!')
+		fh.close()

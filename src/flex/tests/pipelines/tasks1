@@ -1,0 +1,14 @@
+# This is a test pipeline
+
+X = hello
+unset Y
+unset X
+
+task1:
+	export:
+		X = bye
+	code.sh:
+		echo $X
+	code.py:
+		print 2+2
+

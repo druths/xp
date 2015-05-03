@@ -1,0 +1,22 @@
+
+X = hello
+unset Y
+unset X
+
+task1:
+	code.sh:
+		ls -lh
+
+task2: task1
+	export:
+		X = bye
+
+	code.sh:
+		echo $X
+		touch task2_foobar.sh
+	code.py:
+		import os
+		print 2+2
+		os.system('touch task2_foobar.py')
+
+

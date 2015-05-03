@@ -1,0 +1,8 @@
+NUM_RUNS=3
+
+use extend1 as e
+
+my_task: e.extra1
+	code.sh:
+		touch use1_${NUM_RUNS}.txt
+
