@@ -40,18 +40,28 @@ def get_pipeline(filename):
 ########################
 # Classes used to represent a pipeline
 
+FILE_PREFIX = 'file'
+DIR_PREFIX = 'dir'
+
 class Pipeline:
-	def __init__(self,abs_filename,preamble_stmts,tasks):
+	def __init__(self,abs_filename,preamble_stmts,tasks,prefix_type=FILE_PREFIX):
 		self.name = os.path.basename(abs_filename)
 		self.abs_filename = abs_filename
 		self.preamble = preamble_stmts
 		self.tasks = tasks
+		self.prefix = '%s_' % abs_filename
 		self.used_pipelines = None
 
 		for t in self.tasks:
 			t.set_pipeline(self)
 
 		self.initialize()
+
+	def get_used_pipelines(self):
+		return dict(self.used_pipelines)	
+
+	def get_prefix(self):
+		return self.prefix
 
 	def abs_path(self):
 		return os.path.dirname(self.abs_filename)
@@ -91,6 +101,9 @@ class Pipeline:
 				used_pipeline = get_pipeline(filename)
 				logger.debug('adding pipeline %s with alias %s' % (used_pipeline.name,stmt.alias))
 				self.used_pipelines[stmt.alias] = used_pipeline
+			elif isinstance(stmt,PrefixStatement):
+				self.prefix = stmt.get_prefix(self.abs_filename)	
+				logger.debug('changed prefix to %s' % self.prefix)
 			else:
 				new_preamble.append(stmt)
 
@@ -134,8 +147,9 @@ class Pipeline:
 		self.context = {}
 
 		# insert the pipline prefix for us to use and for code blocks to use
-		self.context[PIPELINE_PREFIX_VARNAME] = '%s_' % self.abs_filename
-
+		self.context[PIPELINE_PREFIX_VARNAME] = self.prefix
+		
+		# update all variables from statements in the preamble
 		for s in self.preamble:
 			s.update_context(self.context)
 
@@ -187,6 +201,59 @@ class DeleteVariable:
 	def update_context(self,context):
 		if self.varname in context:
 			del context[self.varname]
+
+class PrefixStatement:
+	def __init__(self,prefix_type,prefix):
+		self.prefix_type = prefix_type
+
+		self.prefix = prefix
+
+		if prefix_type not in [FILE_PREFIX,DIR_PREFIX]:
+			raise ValueError, 'prefix should either be "file" or "dir"'
+	
+	def get_prefix(self,pipeline_abs_fname):
+		if self.prefix is None:
+			if self.prefix_type == FILE_PREFIX:
+				return '%s_' % pipeline_abs_fname
+			elif self.prefix_type == DIR_PREFIX:
+				dir_prefix = '%s_data' % pipeline_abs_fname
+				if not os.path.exists(dir_prefix):
+					logger.debug('creating directory: %s' % dir_prefix)
+					os.mkdir(dir_prefix)
+				elif os.exists(dir_prefix) and not os.path.isdir(dir_prefix):
+					raise Exception, 'directory prefix "%s" exists and is not a directory' % dir_prefix
+
+				return os.path.join(dir_prefix,'')
+			else:
+				# it should be impossible to get here
+				raise Exception, 'unknown prefix type: %s' % self.prefix_type
+		else:
+			if self.prefix_type == FILE_PREFIX:
+				return os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
+			elif self.prefix_type == DIR_PREFIX:
+				total_prefix = os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
+				# create the prefix is need be
+				def mkdirs(d):
+					if os.path.exists(d):
+						return
+					else:
+						head,tail = os.path.split(d)
+
+						# make all directories up to this one
+						if head is not None:
+							mkdirs(head)
+
+						# make this directory
+						os.mkdir(d)
+				
+						return
+
+				if not os.path.exists(total_prefix):
+					mkdirs(total_prefix)
+
+				return os.path.join(total_prefix,'')
+			else:
+				raise Exception, 'unknown prefix type: %s' % self.prefix_type
 
 class ExtendStatement:
 	def __init__(self,filename):
@@ -334,6 +401,7 @@ def parse_pipeline(pipeline_file):
 	# read the preamble
 	extend_pattern = re.compile('^extend\s+(%s)$' % FILE_PATTERN)
 	use_pattern = re.compile('^use\s+(%s)(\s+as\s+(%s))?$' % (FILE_PATTERN,VAR_PATTERN))
+	prefix_pattern = re.compile('^prefix\s+(file|dir)(\s+%s)?\s*$' % FILE_PATTERN)
 	var_assign_pattern = re.compile('^(%s)\s*=(.+)' % VAR_PATTERN)
 	var_del_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
 
@@ -365,10 +433,23 @@ def parse_pipeline(pipeline_file):
 						alias = m.group(3)
 						logger.debug('found use: %s,%s' % (m.group(1),str(m.group(3))))
 						statements.append(UseStatement(m.group(1),alias))
-					elif len(cur_line) == 0 or cur_line.startswith('#'):
-						pass
 					else:
-						in_preamble = False
+						m = prefix_pattern.match(cur_line)
+						if m:
+							prefix_type = m.group(1)
+							prefix = m.group(2)
+
+							if prefix:
+								prefix = prefix.strip()
+								if len(prefix) == 0:
+									prefix = None
+
+							logger.debug('found prefix: %s, %s' % (prefix_type,prefix))
+							statements.append(PrefixStatement(prefix_type,prefix))
+						elif len(cur_line) == 0 or cur_line.startswith('#'):
+							pass
+						else:
+							in_preamble = False
 
 		if in_preamble:
 			lineno += 1
@@ -559,7 +640,6 @@ def expand_variables(x,context,lineno,nested=False):
 				if varname == '':
 					raise ParseException(lineno,'shell evaluations are not currently supported')
 				elif varname == 'PLN':
-					# TODO: Add a switch for supporting storage to pipeline-specific directory
 					ret_val = '%s%s' % (context[PIPELINE_PREFIX_VARNAME],args)
 
 				# make the replacement
