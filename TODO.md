@@ -5,8 +5,6 @@ Feature TODO list
 v0.1
 ----
 
-	* Implement $PLN(pipeline_alias,fname) capabilities
-
 	* Implement command line tool 'fx' to do the following
 		- 'run' = Run a particular task
 		- 'wipe' = Delete all files for a particular pipeline

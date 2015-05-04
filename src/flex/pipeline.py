@@ -49,7 +49,7 @@ class Pipeline:
 		self.abs_filename = abs_filename
 		self.preamble = preamble_stmts
 		self.tasks = tasks
-		self.prefix = '%s_' % abs_filename
+		self.prefix_stmt = PrefixStatement(FILE_PREFIX,None)
 		self.used_pipelines = None
 
 		for t in self.tasks:
@@ -58,10 +58,10 @@ class Pipeline:
 		self.initialize()
 
 	def get_used_pipelines(self):
-		return dict(self.used_pipelines)	
+			return dict(self.used_pipelines)	
 
 	def get_prefix(self):
-		return self.prefix
+		return self.prefix_stmt.get_prefix(self.abs_filename)
 
 	def abs_path(self):
 		return os.path.dirname(self.abs_filename)
@@ -102,11 +102,14 @@ class Pipeline:
 				logger.debug('adding pipeline %s with alias %s' % (used_pipeline.name,stmt.alias))
 				self.used_pipelines[stmt.alias] = used_pipeline
 			elif isinstance(stmt,PrefixStatement):
-				self.prefix = stmt.get_prefix(self.abs_filename)	
-				logger.debug('changed prefix to %s' % self.prefix)
+				self.prefix_stmt = stmt
 			else:
 				new_preamble.append(stmt)
 
+		# initialize the prefix
+		prefix = self.prefix_stmt.get_prefix(self.abs_filename)
+
+		# update the preamble
 		self.preamble = new_preamble
 
 		# now link up the tasks with dependencies
@@ -147,11 +150,11 @@ class Pipeline:
 		self.context = {}
 
 		# insert the pipline prefix for us to use and for code blocks to use
-		self.context[PIPELINE_PREFIX_VARNAME] = self.prefix
+		self.context[PIPELINE_PREFIX_VARNAME] = self.prefix_stmt.get_prefix(self.abs_filename)
 		
 		# update all variables from statements in the preamble
 		for s in self.preamble:
-			s.update_context(self.context)
+			s.update_context(self.context,self.get_used_pipelines())
 
 	def get_task(self,task_name):
 		if task_name in self.task_lookup:
@@ -187,9 +190,9 @@ class VariableAssignment:
 		self.varname = varname
 		self.value = value
 
-	def update_context(self,context):
+	def update_context(self,context,pipelines):
 		# TODO: Keep track of the line number
-		value = expand_variables(self.value,context,-1)
+		value = expand_variables(self.value,context,pipelines,-1)
 		logger.debug('expanded "%s" to "%s"' % (self.value,value))
 
 		context[self.varname] = value	
@@ -198,7 +201,7 @@ class DeleteVariable:
 	def __init__(self,varname):
 		self.varname = varname
 
-	def update_context(self,context):
+	def update_context(self,context,pipelines):
 		if self.varname in context:
 			del context[self.varname]
 
@@ -220,7 +223,7 @@ class PrefixStatement:
 				if not os.path.exists(dir_prefix):
 					logger.debug('creating directory: %s' % dir_prefix)
 					os.mkdir(dir_prefix)
-				elif os.exists(dir_prefix) and not os.path.isdir(dir_prefix):
+				elif os.path.exists(dir_prefix) and not os.path.isdir(dir_prefix):
 					raise Exception, 'directory prefix "%s" exists and is not a directory' % dir_prefix
 
 				return os.path.join(dir_prefix,'')
@@ -232,6 +235,7 @@ class PrefixStatement:
 				return os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
 			elif self.prefix_type == DIR_PREFIX:
 				total_prefix = os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
+				logger.debug('dir prefix = %s' % total_prefix)
 				# create the prefix is need be
 				def mkdirs(d):
 					if os.path.exists(d):
@@ -322,13 +326,14 @@ class Task:
 			logger.debug('task %s: skipping dependencies' % self.name)
 		
 		context = self.pipeline.get_context()
+		pipelines = self.pipeline.get_used_pipelines()
 		cwd = self.pipeline.abs_path()
 
 		# run this tasks
 		logger.debug('task %s: running blocks...' % self.name)
 		for b in self.blocks:
 			logger.debug('task %s: running block %s' % (self.name,str(b.__class__)))
-			b.run(context,cwd)
+			b.run(context,pipelines,cwd)
 
 		# Update the marker
 		self.mark()
@@ -340,13 +345,13 @@ class ExportBlock:
 	def copy(self):
 		return ExportBlock(self.statements)
 
-	def run(self,context,cwd):
+	def run(self,context,pipelines,cwd):
 		# modify the context - that's all the export block can do
-		self.update_context(context)
+		self.update_context(context,pipelines)
 
-	def update_context(self,context):
+	def update_context(self,context,pipelines):
 		for s in self.statements:
-			s.update_context(context)
+			s.update_context(context,pipelines)
 
 class CodeBlock:
 	def __init__(self,lang,content):
@@ -356,12 +361,12 @@ class CodeBlock:
 	def copy(self):
 		return CodeBlock(self.lang,self.content)
 
-	def run(self,context,cwd):
+	def run(self,context,pipelines,cwd):
 		# expand any variables in the content
 		# TODO: Update line numbers
 		content = []
 		for line in self.content:
-			content.append(expand_variables(line,context,-1))
+			content.append(expand_variables(line,context,pipelines,-1))
 
 		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
@@ -572,7 +577,7 @@ def read_block_content(lines,lineno):
 variable_pattern = re.compile('([\w\d_]+|\{[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']
 
-def expand_variables(x,context,lineno,nested=False):
+def expand_variables(x,context,pipelines,lineno,nested=False):
 	"""
 	This function will both parse variables in the 
 	string (assumed to be one line of text) and replace them
@@ -627,20 +632,40 @@ def expand_variables(x,context,lineno,nested=False):
 					raise ParseException(lineno,'invalid builtin function name: %s' % varname)
 
 				# process the rest of the string
-				expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,lineno,nested=True)
+				expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,pipelines,lineno,nested=True)
 
 				x = x[:fxn_argstart_pos] + expanded_x_part
 				eofxn = fxn_argstart_pos + eofxn
 
-				# TODO: Should we add support for multiple arguments?
-				args = x[fxn_argstart_pos:eofxn]
+				# extract arguments
+				args_str = x[fxn_argstart_pos:eofxn]
+				args = map(lambda x: x.strip(),args_str.split(','))
+				logger.debug('got fxn args: %s' % str(args))
 
 				# apply the function
 				ret_val = ''
 				if varname == '':
 					raise ParseException(lineno,'shell evaluations are not currently supported')
 				elif varname == 'PLN':
-					ret_val = '%s%s' % (context[PIPELINE_PREFIX_VARNAME],args)
+					prefix = None
+
+					if len(args) == 1:
+						prefix = context[PIPELINE_PREFIX_VARNAME]
+						fname = args[0]
+					elif len(args) == 2:
+						pln_name = args[0]
+						
+						if pln_name not in pipelines:
+							raise Exception, 'unable to find pipeline with alias "%s"' % pln_name
+
+						prefix = pipelines[pln_name].get_prefix()
+						logger.debug('PLN reference got prefix = %s' % prefix)
+						fname = args[1]
+					else:
+						# TODO: Add line number
+						raise Exception, 'too many arguments for $PLN(...) fxn'
+
+					ret_val = '%s%s' % (prefix,fname)
 
 				# make the replacement
 				pre_fxn = x[:cpos]

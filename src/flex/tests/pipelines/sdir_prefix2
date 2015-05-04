@@ -1,0 +1,10 @@
+prefix dir sdir_foo2/bar
+
+use sdir_prefix as sdir
+
+X=1
+
+task2:
+	code.sh:
+		touch $PLN(hello_world.txt)
+		touch $PLN(sdir,hello_world.txt)
