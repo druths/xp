@@ -1,5 +1,5 @@
 import unittest
-from flex.pipeline import get_pipeline, expand_variables, PIPELINE_PREFIX_VARNAME, ParseException
+from flex.pipeline import get_pipeline, expand_variables, PIPELINE_PREFIX_VARNAME, ParseException, USE_FILE_PREFIX
 import flex.pipeline as pipeline
 import os, os.path
 import shutil
@@ -71,7 +71,7 @@ class VarExpansionTestCase(unittest.TestCase):
 			- basic pipeline filename expansion
 			- nested pipeline filename expansion
 		"""
-		p = get_pipeline(get_complete_filename('varexpand1'))
+		p = get_pipeline(get_complete_filename('varexpand1'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
@@ -89,7 +89,7 @@ class VarExpansionTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_used_pln_expand1(self):
-		p = get_pipeline(get_complete_filename('sdir_prefix2'))
+		p = get_pipeline(get_complete_filename('sdir_prefix2'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 

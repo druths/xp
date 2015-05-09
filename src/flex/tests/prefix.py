@@ -1,5 +1,5 @@
 import unittest
-from flex.pipeline import get_pipeline, expand_variables, PIPELINE_PREFIX_VARNAME, ParseException
+from flex.pipeline import get_pipeline, expand_variables, PIPELINE_PREFIX_VARNAME, ParseException, USE_FILE_PREFIX
 import flex.pipeline as pipeline
 import os, os.path
 import shutil
@@ -12,7 +12,7 @@ def get_complete_filename(fname):
 class PrefixTestCase(unittest.TestCase):
 	
 	def test_default_file_prefix(self):
-		p = get_pipeline(get_complete_filename('dfile_prefix'))
+		p = get_pipeline(get_complete_filename('dfile_prefix'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
@@ -24,7 +24,7 @@ class PrefixTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_spec_file_prefix(self):
-		p = get_pipeline(get_complete_filename('sfile_prefix'))
+		p = get_pipeline(get_complete_filename('sfile_prefix'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
@@ -36,7 +36,7 @@ class PrefixTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_default_dir_prefix(self):
-		p = get_pipeline(get_complete_filename('ddir_prefix'))
+		p = get_pipeline(get_complete_filename('ddir_prefix'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
@@ -48,7 +48,7 @@ class PrefixTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_spec_dir_prefix(self):
-		p = get_pipeline(get_complete_filename('sdir_prefix'))
+		p = get_pipeline(get_complete_filename('sdir_prefix'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 

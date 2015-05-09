@@ -1,5 +1,5 @@
 import unittest
-from flex.pipeline import get_pipeline
+from flex.pipeline import get_pipeline, USE_FILE_PREFIX
 import flex.pipeline as pipeline
 import os, os.path
 
@@ -12,13 +12,13 @@ class BasicTestCase(unittest.TestCase):
 
 	def test_parse_empty_file(self):
 
-		ep = get_pipeline(get_complete_filename('empty'))
+		ep = get_pipeline(get_complete_filename('empty'),default_prefix=USE_FILE_PREFIX)
 
 		self.assertEquals(len(ep.preamble),0)
 		self.assertEquals(len(ep.tasks),0)
 	
 	def test_simple_preamble(self):
-		p = get_pipeline(get_complete_filename('preamble1'))
+		p = get_pipeline(get_complete_filename('preamble1'),default_prefix=USE_FILE_PREFIX)
 
 		self.assertEquals(len(p.preamble),3)
 		self.assertTrue(isinstance(p.preamble[0],pipeline.VariableAssignment))
@@ -27,7 +27,7 @@ class BasicTestCase(unittest.TestCase):
 		self.assertEquals(len(p.tasks),0)
 
 	def test_simple_tasks(self):
-		p = get_pipeline(get_complete_filename('tasks1'))
+		p = get_pipeline(get_complete_filename('tasks1'),default_prefix=USE_FILE_PREFIX)
 
 		self.assertEquals(len(p.preamble),3)
 		self.assertEquals(len(p.tasks),1)
@@ -44,7 +44,7 @@ class BasicTestCase(unittest.TestCase):
 		self.assertEquals(task0.blocks[2].lang,'py')
 
 	def test_simple_tasks2(self):
-		p = get_pipeline(get_complete_filename('tasks2'))
+		p = get_pipeline(get_complete_filename('tasks2'),default_prefix=USE_FILE_PREFIX)
 
 		self.assertEquals(len(p.preamble),3)
 		self.assertEquals(len(p.tasks),2)
@@ -61,16 +61,16 @@ class BasicTestCase(unittest.TestCase):
 		self.assertEquals(task1.blocks[2].lang,'py')
 
 	def test_extend(self):
-		p = get_pipeline(get_complete_filename('extend1'))
+		p = get_pipeline(get_complete_filename('extend1'),default_prefix=USE_FILE_PREFIX)
 
 		self.assertEquals(len(p.preamble),5)
 
 	def test_nop_unmark(self):
-		p = get_pipeline(get_complete_filename('tasks2'))
+		p = get_pipeline(get_complete_filename('tasks2'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks()
 
 	def test_run_tasks2(self):
-		p = get_pipeline(get_complete_filename('tasks2'))
+		p = get_pipeline(get_complete_filename('tasks2'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
@@ -88,7 +88,7 @@ class BasicTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_run_extend1(self):
-		p = get_pipeline(get_complete_filename('extend1'))
+		p = get_pipeline(get_complete_filename('extend1'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
@@ -109,7 +109,7 @@ class BasicTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 	
 	def test_run_use1(self):
-		p = get_pipeline(get_complete_filename('use1'))
+		p = get_pipeline(get_complete_filename('use1'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 

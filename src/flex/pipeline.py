@@ -14,12 +14,19 @@ logger = logging.getLogger(os.path.basename(__file__))
 # Constants
 PIPELINE_PREFIX_VARNAME = 'FLEX_PLN_PREFIX'
 
+FILE_PREFIX = 'file'
+DIR_PREFIX = 'dir'
+
+USE_FILE_PREFIX = (FILE_PREFIX,None)
+
+
 #################
 # the factory function 
 _pipelines = {}
 _under_construction = set()
 
-def get_pipeline(filename):
+def get_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
+
 	# resolve filename to canonical absolute path
 	filename = os.path.realpath(os.path.abspath(filename))
 
@@ -31,7 +38,7 @@ def get_pipeline(filename):
 
 	if filename not in _pipelines:
 		_under_construction.add(filename)
-		pipeline = parse_pipeline(filename)
+		pipeline = parse_pipeline(filename,default_prefix)
 		_under_construction.remove(filename)
 		_pipelines[filename] = pipeline
 
@@ -40,16 +47,13 @@ def get_pipeline(filename):
 ########################
 # Classes used to represent a pipeline
 
-FILE_PREFIX = 'file'
-DIR_PREFIX = 'dir'
-
 class Pipeline:
-	def __init__(self,abs_filename,preamble_stmts,tasks,prefix_type=FILE_PREFIX):
+	def __init__(self,abs_filename,preamble_stmts,tasks,default_prefix):
 		self.name = os.path.basename(abs_filename)
 		self.abs_filename = abs_filename
 		self.preamble = preamble_stmts
 		self.tasks = tasks
-		self.prefix_stmt = PrefixStatement(FILE_PREFIX,None)
+		self.prefix_stmt = PrefixStatement(*default_prefix)
 		self.used_pipelines = None
 
 		for t in self.tasks:
@@ -397,7 +401,7 @@ class VariableValueException(Exception):
 VAR_PATTERN = '\w[\w\d_]*'
 FILE_PATTERN = '.+?'
 
-def parse_pipeline(pipeline_file):
+def parse_pipeline(pipeline_file,default_prefix):
 	
 	# read in the content of the file
 	pipeline_file = os.path.realpath(os.path.abspath(pipeline_file))
@@ -483,7 +487,7 @@ def parse_pipeline(pipeline_file):
 				raise ParseException(lineno,'expected a task definition, got: %s' % cur_line)
 
 	# make the pipeline
-	pipeline = Pipeline(pipeline_file,statements,tasks)
+	pipeline = Pipeline(pipeline_file,statements,tasks,default_prefix=default_prefix)
 
 	# return the pipeline
 	return pipeline
