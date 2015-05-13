@@ -7,7 +7,7 @@ from flex.pipeline import get_pipeline
 
 logger = logging.getLogger(os.path.basename(__file__))
 
-LOG_LEVELS = ['DEBUG','WARN','ERROR','FATAL']
+LOG_LEVELS = ['DEBUG','WARN','ERROR','CRITICAL']
 COMMANDS = ['info','unmark','mark','run']
 
 def do_info(args):
@@ -62,6 +62,11 @@ def do_unmark(args):
 		for tname in args.task_names:
 			logger.debug('unmarking task: %s' % tname)
 			task = p.get_task(tname)
+
+			if task is None:
+				logger.error('task %s dos not exist' % tname)
+				break
+
 			task.unmark()
 		
 def do_mark(args):
@@ -91,6 +96,11 @@ def do_mark(args):
 		for tname in args.task_names:
 			logger.debug('marking task: %s' % tname)
 			task = p.get_task(tname)
+
+			if task is None:
+				logger.error('task %s does not exist' % tname)
+				break
+
 			task.mark()
 
 def do_run(args):
@@ -110,7 +120,11 @@ def do_run(args):
 		p.run()
 	else:
 		t = p.get_task(args.task_name)
-		t.run(force=args.force)
+
+		if t is None:
+			logger.error('task %s does not exist' % tname)
+		else:
+			t.run(force=args.force)
 
 def main():
 	parser = argparse.ArgumentParser('fx')
@@ -122,7 +136,7 @@ def main():
 
 	# configure the logger
 	log_level = eval('logging.%s' % args.log_level)
-	logging.basicConfig(level=log_level)
+	logging.basicConfig(level=log_level,format='%(levelname)s: %(message)s')
 
 	# run the command
 	logger.debug('running command: %s' % args.command)
