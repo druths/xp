@@ -1,0 +1,19 @@
+
+use dep_test2a as dep
+
+p1_t4: p1_t3 p1_t2
+	export:
+		blargh=3
+
+p1_t3: p1_t1
+	export:
+		blargh=3
+
+p1_t2: p1_t1
+	export:
+		blargh=3
+
+p1_t1: dep.p0_t3 dep.p0_t2
+	export:
+		blargh=3
+

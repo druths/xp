@@ -1,0 +1,13 @@
+
+p0_t2: p0_t1
+	export:
+		blah=2
+
+p0_t3: p0_t1 p0_t2
+	export:
+		blah=3
+
+p0_t1:
+	export:
+		blargh=2
+

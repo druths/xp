@@ -1,0 +1,17 @@
+
+t4: t2 t3
+	export:
+		var=2
+
+t2: t1
+	export:
+		var=3
+
+t1:
+	export:
+		foo=foo
+
+t3: t1
+	export:
+		blargh=4
+

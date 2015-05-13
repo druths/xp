@@ -44,6 +44,50 @@ def get_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
 
 	return _pipelines[filename]
 
+
+########################
+# Functions to handle the dependency graph
+
+def get_visitation_list(all_tasks):
+	"""
+	Return an ordered list of tasks, with roots first, leaves last.
+	Each element in the visitation list, V[i], is a tuple (task,depth)
+	where a higher depth indicates being closer to a root.
+	"""
+	# find the leaves
+	all_deps = set()
+	for t in all_tasks:
+		all_deps.update(t.get_deps())
+
+	leaves = set(all_tasks).difference(all_deps)
+	
+	# put tasks into layers
+	depth = 0
+	cur_layer = leaves
+	task_depths = {t:0 for t in leaves}
+	while len(cur_layer) > 0:
+		depth += 1
+		next_layer = set()
+
+		for t in cur_layer:
+			for d in t.get_deps():
+				task_depths[d] = depth
+				next_layer.add(d)
+
+		cur_layer = next_layer
+
+	max_depth = depth
+
+	# visit nodes in order of increasing depth
+	visitation_list = sorted(task_depths.items(),key=lambda x: -x[1])
+
+	return visitation_list
+
+def dep_graph_iter(all_tasks):
+	
+	for task,depth in get_visitation_list(all_tasks):
+		yield task
+	
 ########################
 # Classes used to represent a pipeline
 
@@ -159,6 +203,28 @@ class Pipeline:
 		# update all variables from statements in the preamble
 		for s in self.preamble:
 			s.update_context(self.context,self.get_used_pipelines())
+
+	def get_visitation_list(self):
+		# compile all tasks
+		return get_visitation_list(self.get_all_tasks())
+
+	def get_all_tasks(self):
+		"""
+		Get all tasks that this pipeline uses
+		"""
+		all_tasks = set(self.tasks)
+		new_tasks = self.tasks
+		while len(new_tasks) > 0:
+			next_tasks = set()
+			for t in new_tasks:
+				for d in t.get_deps():
+					if d not in all_tasks:
+						next_tasks.add(d)
+						all_tasks.add(d)
+			new_tasks = next_tasks
+
+		# TODO: Should probably memorize this
+		return all_tasks
 
 	def get_task(self,task_name):
 		if task_name in self.task_lookup:
@@ -289,6 +355,9 @@ class Task:
 
 	def set_pipeline(self,pipeline):
 		self.pipeline = pipeline
+
+	def get_deps(self):
+		return list(self._dependencies)
 
 	def clear_dependencies(self):
 		self._dependencies = []
