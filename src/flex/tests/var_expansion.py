@@ -89,7 +89,24 @@ class VarExpansionTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_used_pln_expand1(self):
+		"""
+		This test and pln_expand2 (the next one) concerns the rather nuanced interpretation of
+		using another pipeline. Only those tasks in the used pipeline are invoked that are in
+		the dependency chain for the tasks in the present pipeline.
+		"""
 		p = get_pipeline(get_complete_filename('sdir_prefix2'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()
+
+		# check the output
+		self.assertTrue(os.path.exists(get_complete_filename(os.path.join('sdir_foo2','bar','hello_world.txt'))))
+
+		shutil.rmtree(get_complete_filename('sdir_foo2'))
+
+		p.unmark_all_tasks(recur=True)	
+
+	def test_used_pln_expand2(self):
+		p = get_pipeline(get_complete_filename('sdir_prefix3'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 

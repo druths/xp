@@ -191,6 +191,9 @@ class Pipeline:
 					else:
 						raise Exception, 'dependency of %s not found: %s' % (t.name,d)
 
+		# now update the context
+		self.build_context()
+
 		# Done!
 
 	def build_context(self):
@@ -203,6 +206,10 @@ class Pipeline:
 		# update all variables from statements in the preamble
 		for s in self.preamble:
 			s.update_context(self.context,self.get_used_pipelines())
+
+	def pre_run(self,task):
+		# initialize the prefix space if need be
+		self.prefix_stmt.create_prefix(self.abs_filename)
 
 	def get_visitation_list(self):
 		# compile all tasks
@@ -237,6 +244,14 @@ class Pipeline:
 		Return a dictionary of variables
 		"""
 		return dict(self.context)
+
+	def mark_all_tasks(self,recur=False):
+		for t in self.tasks:
+			t.mark()
+
+		if recur:
+			for pipeline in self.used_pipelines.values():
+				pipeline.mark_all_tasks(recur=True)
 
 	def unmark_all_tasks(self,recur=False):
 		for t in self.tasks:
@@ -290,12 +305,6 @@ class PrefixStatement:
 				return '%s_' % pipeline_abs_fname
 			elif self.prefix_type == DIR_PREFIX:
 				dir_prefix = '%s_data' % pipeline_abs_fname
-				if not os.path.exists(dir_prefix):
-					logger.debug('creating directory: %s' % dir_prefix)
-					os.mkdir(dir_prefix)
-				elif os.path.exists(dir_prefix) and not os.path.isdir(dir_prefix):
-					raise Exception, 'directory prefix "%s" exists and is not a directory' % dir_prefix
-
 				return os.path.join(dir_prefix,'')
 			else:
 				# it should be impossible to get here
@@ -306,28 +315,36 @@ class PrefixStatement:
 			elif self.prefix_type == DIR_PREFIX:
 				total_prefix = os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
 				logger.debug('dir prefix = %s' % total_prefix)
-				# create the prefix is need be
-				def mkdirs(d):
-					if os.path.exists(d):
-						return
-					else:
-						head,tail = os.path.split(d)
-
-						# make all directories up to this one
-						if head is not None:
-							mkdirs(head)
-
-						# make this directory
-						os.mkdir(d)
-				
-						return
-
-				if not os.path.exists(total_prefix):
-					mkdirs(total_prefix)
-
 				return os.path.join(total_prefix,'')
 			else:
 				raise Exception, 'unknown prefix type: %s' % self.prefix_type
+
+	def create_prefix(self,pipeline_abs_fname):
+		def mkdirs(d):
+			if os.path.exists(d):
+				return
+			else:
+				head,tail = os.path.split(d)
+	
+				# make all directories up to this one
+				if head is not None:
+					mkdirs(head)
+	
+				# make this directory if it isn't just an empty string
+				if len(tail) > 0:
+					os.mkdir(d)
+		
+				return
+
+		prefix = self.get_prefix(pipeline_abs_fname)
+
+		if self.prefix_type == FILE_PREFIX:
+			return
+		elif self.prefix_type == DIR_PREFIX:
+			logger.debug('creating directory: %s' % prefix)
+			mkdirs(prefix)
+		else:
+			raise Exception, 'unknown prefix type: %s' % self.prefix_type
 
 class ExtendStatement:
 	def __init__(self,filename):
@@ -371,6 +388,7 @@ class Task:
 	def unmark(self):
 		# Remove the marker file
 		if self.is_marked():
+			logger.debug('removing mark file %s' % self.mark_file())
 			os.remove(self.mark_file())
 	
 	def mark(self):
@@ -384,10 +402,20 @@ class Task:
 	def is_marked(self):
 		return os.path.exists(self.mark_file())
 
+	def mark_timestamp(self):
+		if not self.is_marked():
+			return None
+		else:
+			logger.debug('returning ts for mark file: %s' % self.mark_file())
+			return os.path.getmtime(self.mark_file())
+
 	def run(self,force=False,skip_dependencies=False):
+
+		self.pipeline.pre_run(self)
 
 		logger.debug('task %s: marked = %d' % (self.name,self.is_marked()))
 		if not force and self.is_marked():
+			logger.info('task %s is marked, skipping' % self.name)
 			return
 
 		# first run all dependencies
@@ -403,7 +431,7 @@ class Task:
 		cwd = self.pipeline.abs_path()
 
 		# run this tasks
-		logger.debug('task %s: running blocks...' % self.name)
+		logger.info('task %s: running blocks...' % self.name)
 		for b in self.blocks:
 			logger.debug('task %s: running block %s' % (self.name,str(b.__class__)))
 			b.run(context,pipelines,cwd)
