@@ -21,11 +21,28 @@ def run_shell(context,cwd,content):
 def run_python(context,cwd,content):
 
 	# write python code to a tmp file
-	fh,pyfilename = tempfile.mkstemp(suffix='py')
+	fh,tmp_filename = tempfile.mkstemp(suffix='py')
 	os.write(fh,'\n'.join(content))
 	os.close(fh)
 
-	logger.debug('wrote python content to %s' % pyfilename)
+	logger.debug('wrote python content to %s' % tmp_filename)
 	
-	cmd = 'python %s' % pyfilename
+	exec_name = context.get('PYTHON','python')
+	cmd = '%s %s' % (exec_name,tmp_filename)
+	logger.debug('using cmd: %s' % cmd)
 	subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
+
+def run_gnuplot(context,cwd,content):
+	
+	# write gnuplot code to a tmp file
+	fh,tmp_filename = tempfile.mkstemp(suffix='gp')
+	os.write(fh,'\n'.join(content))
+	os.close(fh)
+
+	logger.debug('wrote gnuplot content to %s' % tmp_filename)
+	
+	exec_name = context.get('GNUPLOT','gnuplot')
+	cmd = '%s %s' % (exec_name,tmp_filename)
+	logger.debug('using cmd: %s' % cmd)
+	subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
+

@@ -479,6 +479,10 @@ class CodeBlock:
 
 		elif self.lang == 'py':
 			blocks.run_python(context,cwd,content)
+		elif self.lang == 'gnuplot':
+			blocks.run_gnuplot(context,cwd,content)
+		else:
+			raise BlockFailed, 'unknown block type: %s' % self.lang
 
 class BlockFailed(Exception):
 	pass

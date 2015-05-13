@@ -1,0 +1,12 @@
+
+t1:
+	code.gnuplot:
+		set terminal png size 400,300 enhanced font "Helvetica,20"
+		set output '$PLN(output1.png)'
+		plot sin(x)/x
+	
+t2: t1
+	code.gnuplot:
+		set terminal png size 400,300 enhanced font "Helvetica,20"
+		set output 'output2.png'
+		plot sin(x)/x

@@ -5,11 +5,6 @@ Feature TODO list
 v0.1
 ----
 
-	* code block support for:
-		gnuplot
-		X python
-		X sh
-
 	* Implement $(...) command which executes the information in the shell within the current context 
 
 	* Implement overloading of tasks (the last task of the given name kills all earlier ones)
