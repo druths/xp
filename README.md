@@ -1,6 +1,6 @@
 
-Introduction
-------------
+# Introduction #
+
 Flex is a command-line tool for building data-science pipelines, particularly
 in the research context. It draws its inspiration from make and linguini.
 
@@ -14,8 +14,7 @@ hard to reconstruct.
 Flex makes it easy to create and update workflows (called pipelines) while
 always retaining a connection to the data that the pipeline produced.
 
-Installation
-------------
+# Installation #
 
 Install flex by running
 
@@ -27,8 +26,7 @@ or
 
 depending on permission settings for your python site-packages.
 
-Writing a pipeline
-------------------
+# Writing a pipeline #
 
 A *pipeline* is a sequence of steps, called *tasks*, that manipulates data.  On
 a very practical level, each task taking some files as input and producing
@@ -84,10 +82,15 @@ different languages - making it possible to stitch together workflows that
 involve different languages. A single task can even contain multiple blocks for
 the same or different languages.
 
-Currently, Flex supports three block types:
+Currently, Flex supports four block types:
+
+  * *export* (`export`) - this allows environment variables to be set and 
+  	unset within the context of a specific task
 
   * *python* (`code.py`)
+
   * *shell* (`code.sh`)
+
   * *gnuplot* (`code.gnuplot`)
 
 These, of course, require that the appropriate executables are present on the
@@ -104,8 +107,7 @@ Once a pipeline has been written, it can be run using the flex command-line tool
 The command-line tool also allows easy marking (`mark`), unmarking (`unmark`),
 and querying statistics (`info`) for a pipeline.
 
-Pipeline-specific Data
-=====================
+## Pipeline-specific Data ##
 
 A common activity that creates a lot of data management issues is running
 effectively the same or similar pipelines using different parameter settings:
@@ -133,8 +135,7 @@ placed in a pipeline-specific directory).  Future references to this file via
 `$PLN(data.tsv)` will access only this pipeline's version of the file - even if
 many pipelines are downloading the files at various times.
 
-Extending Pipelines
-===================
+## Extending Pipelines ##
 
 In some cases, one will want to run exactly the same pipeline over and over
 with different parameter settings. To support this, Flex allows *extending*
@@ -176,8 +177,7 @@ ALPHA=3
 Note that in each case the cluster data will be stored to `$PLN(clusters.tsv)`,
 so that each pipeline will have its own separate stored data.
 
-Connecting Pipelines Together
-============================
+## Connecting Pipelines Together ##
 
 It's quite reasonable to expect that one pipeline could feed into another
 pipeline. Flex supports this - pipelines can depend on the tasks in other
@@ -235,14 +235,12 @@ label_articles: build_crf_model
 		model.label_documents(docs='$NEWS_ARTICLES',out_file='$PLN(news.labels)')
 ```
 
-Examples
-========
+## Examples ##
 
 See the `examples/` directory in the flex root directory to see some real
 pipelines that demonstrate the core features of the tool.
 
-Command-line usage
-------------------
+# Command-line usage #
 
 The `fx` command provides several core capabilities:
 
