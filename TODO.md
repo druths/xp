@@ -11,4 +11,7 @@ v0.1
 
 v0.2
 ----
+	
+	* Implement fx commands: import, export, info, and desc
+
 	* modularize the code block execution code

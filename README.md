@@ -84,12 +84,12 @@ the same or different languages.
 
 Currently, Flex supports four block types:
 
-  * *export* (`export`) - this allows environment variables to be set and 
+  - *export* (`export`) - this allows environment variables to be set and 
   	unset within the context of a specific task
 
-  * *python* (`code.py`)
+  - *python* (`code.py`)
 
-  * *shell* (`code.sh`)
+  - *shell* (`code.sh`)
 
   * *gnuplot* (`code.gnuplot`)
 
@@ -244,21 +244,25 @@ pipelines that demonstrate the core features of the tool.
 
 The `fx` command provides several core capabilities:
 
-  * `fx info <pipeline>` will print info about the pipeline including tasks and whether they are marked.
+  - `fx info <pipeline>` will print info about the pipeline (NOT IMPLEMENTED)
 
-  * `fx tasks <pipeline>` will out info about one or more tasks in the pipeline.
+  - `fx tasks <pipeline>` will out info about one or more tasks in the pipeline including whether they are marked
 
-  * `fx run <pipeline>` will run a pipeline (or a task within a pipeline)
+  - `fx run <pipeline>` will run a pipeline (or a task within a pipeline)
 
-  * `fx desc <pipeline>` will describe how a pipeline (or a task within a
+  - `fx desc <pipeline>` will describe how a pipeline (or a task within a
     pipeline) will be run. This is a good way to make sure that running your
-    pipeline will do what you expect.
+    pipeline will do what you expect. (NOT IMPLEMENTED)
 
-  * `fx mark <pipeline>` will mark specific tasks or an entire pipeline
+  - `fx mark <pipeline>` will mark specific tasks or an entire pipeline
 
-  * `fx unmark <pipeline>` will unmark specific tasks or an entire pipeline
+  - `fx unmark <pipeline>` will unmark specific tasks or an entire pipeline
 
-  * `fx wipe <pipeline>` will remove all files in the namespace of the pipeline ... be very careful using this command!
+  - `fx wipe <pipeline>` will remove all files in the namespace of the pipeline ... be very careful using this command!
+
+  - `fx import <pipeline> <files>` will bring files into the pipeline namespace (NOT IMPLEMENTED)
+
+  - `fx export <pipeline> <files>` will move files out of the pipeline namespace (NOT IMPLEMENTED)
 
 All of these commands have help messages to help their correct use.
 

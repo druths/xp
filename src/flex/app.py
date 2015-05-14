@@ -8,9 +8,25 @@ from flex.pipeline import get_pipeline
 logger = logging.getLogger(os.path.basename(__file__))
 
 LOG_LEVELS = ['DEBUG','WARN','ERROR','CRITICAL']
-COMMANDS = ['info','unmark','mark','run']
+COMMANDS = ['tasks','info','unmark','mark','run','wipe','import','export','desc']
 
 def do_info(args):
+	raise NotImplemented
+	pass
+
+def do_wipe(args):
+	raise NotImplemented
+	pass
+
+def do_import(args):
+	raise NotImplemented
+	pass
+
+def do_export(args):
+	raise NotImplemented
+	pass
+
+def do_tasks(args):
 	parser = argparse.ArgumentParser('fx info',description='print information on a particular pipeline')
 	parser.add_argument('pipeline_file',help='the pipeline to unmark tasks in')
 
@@ -102,6 +118,10 @@ def do_mark(args):
 				break
 
 			task.mark()
+
+def do_desc(args):
+	raise NotImplemented
+	pass
 
 def do_run(args):
 	parser = argparse.ArgumentParser('fx run',description='run a flex pipeline')
