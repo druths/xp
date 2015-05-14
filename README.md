@@ -4,7 +4,7 @@
 Flex is a command-line tool for building data-science pipelines, particularly
 in the research context. It draws its inspiration from make and linguini.
 
-Flex seeks to address a fundamental issue that haunt every brand of
+Flex seeks to address a fundamental issue that haunts every brand of
 data-science: over the course of a project, data becomes disconnected from the
 processes that produced it. Once data loses its context, even the most basic
 interpretive tasks become exceedingly difficult.  Moreover, attempts to
