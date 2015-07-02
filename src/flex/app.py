@@ -11,19 +11,19 @@ LOG_LEVELS = ['DEBUG','WARN','ERROR','CRITICAL']
 COMMANDS = ['tasks','info','unmark','mark','run','wipe','import','export','desc']
 
 def do_info(args):
-	raise NotImplemented
+	raise NotImplementedError
 	pass
 
 def do_wipe(args):
-	raise NotImplemented
+	raise NotImplementedError
 	pass
 
 def do_import(args):
-	raise NotImplemented
+	raise NotImplementedError
 	pass
 
 def do_export(args):
-	raise NotImplemented
+	raise NotImplementedError
 	pass
 
 def do_tasks(args):
@@ -120,7 +120,7 @@ def do_mark(args):
 			task.mark()
 
 def do_desc(args):
-	raise NotImplemented
+	raise NotImplementedError
 	pass
 
 def do_run(args):
@@ -160,7 +160,10 @@ def main():
 
 	# run the command
 	logger.debug('running command: %s' % args.command)
-	eval('do_%s(args.cmd_args)' % args.command)
+	try:
+		eval('do_%s(args.cmd_args)' % args.command)
+	except Exception as e:
+		logging.exception('command %s failed' % args.command)
 
 	return
 
