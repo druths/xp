@@ -9,9 +9,11 @@ v0.1
 
 	* Implement overloading of tasks (the last task of the given name kills all earlier ones)
 
+	* Resolve the question of how forcing marked tasks and dependencies work
+
 v0.2
 ----
 	
-	* Implement fx commands: import, export, info, and desc
+	* Implement fx commands: import, export, info, and dry_run 
 
 	* modularize the code block execution code

@@ -8,7 +8,7 @@ from flex.pipeline import get_pipeline
 logger = logging.getLogger(os.path.basename(__file__))
 
 LOG_LEVELS = ['DEBUG','WARN','ERROR','CRITICAL']
-COMMANDS = ['tasks','info','unmark','mark','run','wipe','import','export','desc']
+COMMANDS = ['tasks','info','unmark','mark','run','wipe','import','export','dry_run']
 
 def do_info(args):
 	raise NotImplementedError
@@ -119,7 +119,7 @@ def do_mark(args):
 
 			task.mark()
 
-def do_desc(args):
+def do_dry_run(args):
 	raise NotImplementedError
 	pass
 
