@@ -27,8 +27,8 @@ def do_export(args):
 	pass
 
 def do_tasks(args):
-	parser = argparse.ArgumentParser('fx info',description='print information on a particular pipeline')
-	parser.add_argument('pipeline_file',help='the pipeline to unmark tasks in')
+	parser = argparse.ArgumentParser('fx tasks',description='print information on tasks in a particular pipeline')
+	parser.add_argument('pipeline_file',help='the pipeline to view tasks in')
 
 	args = parser.parse_args(args)
 
