@@ -5,8 +5,6 @@ Feature TODO list
 v0.1
 ----
 
-	* Implement overloading of tasks (the last task of the given name kills all earlier ones)
-
 	* Resolve the question of how forcing marked tasks and dependencies work
 
 	* Implement $(...) command which executes the information in the shell within the current context 
