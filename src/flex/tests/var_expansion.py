@@ -15,50 +15,73 @@ class InnerVarExpansionTestCase(unittest.TestCase):
 	"""
 	def test_basic1(self):
 		context = {'var1':'hello'}
+		cwd = '.'
 
-		exval = expand_variables('$var1.txt',context,None,-1)
+		exval = expand_variables('$var1.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'hello.txt')
 
-		exval = expand_variables('${var1}.txt',context,None,-1)
+		exval = expand_variables('${var1}.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'hello.txt')
 			
-		exval = expand_variables('hello_$var1.txt',context,None,-1)
+		exval = expand_variables('hello_$var1.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'hello_hello.txt')
 
 	def test_multvars1(self):
 		context = {'var1':'hello', 'foobar':'test'}
+		cwd = '.'
 
-		exval = expand_variables('${var1}_$foobar.txt',context,None,-1)
+		exval = expand_variables('${var1}_$foobar.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'hello_test.txt')
 
-		exval = expand_variables('${var1}_${foobar}.txt',context,None,-1)
+		exval = expand_variables('${var1}_${foobar}.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'hello_test.txt')
 			
-		exval = expand_variables('echo $var1 $foobar',context,None,-1)
+		exval = expand_variables('echo $var1 $foobar',context,cwd,None,-1)
 		self.assertEquals(exval,'echo hello test')
 
 	def test_pipeline_fxn1(self):
 		context = {'var1':'hello', PIPELINE_PREFIX_VARNAME:'/foo/bar_'}
+		cwd = '.'
 
-		exval = expand_variables('touch $PLN(test1.txt)',context,None,-1)
+		exval = expand_variables('touch $PLN(test1.txt)',context,cwd,None,-1)
 		self.assertEquals(exval,'touch /foo/bar_test1.txt')
 
-		exval = expand_variables('touch $PLN($var1.txt)',context,None,-1)
+		exval = expand_variables('touch $PLN($var1.txt)',context,cwd,None,-1)
 		self.assertEquals(exval,'touch /foo/bar_hello.txt')
+
+	def test_shell_fxn1(self):
+		context = {'var1':'hello'}
+		cwd = '.'
+
+		exval = expand_variables('touch $(echo hi)',context,cwd,None,-1)
+		self.assertEquals(exval,'touch hi')
+
+	def test_shell_fxn_newline_error1(self):
+		context = {'var1':'hello'}
+		cwd = '.'
+
+		raised_exc = False
+		try:
+			exval = expand_variables('touch $(ls -1)',context,cwd,None,-1)
+		except:
+			raised_exc = True
+
+		self.assertTrue(raised_exc,'inline shell functions should fail on output containing newlines')
 
 	def test_escape1(self):
 		context = {'var1':'hello'}
+		cwd = '.'
 
-		exval = expand_variables('\$var1.txt',context,None,-1)
+		exval = expand_variables('\$var1.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'$var1.txt')
 
-		exval = expand_variables('\${var1.txt',context,None,-1)
+		exval = expand_variables('\${var1.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'${var1.txt')
 			
-		exval = expand_variables('\${var1}.txt',context,None,-1)
+		exval = expand_variables('\${var1}.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'${var1}.txt')
 			
-		exval = expand_variables('hello_$var1.txt',context,None,-1)
+		exval = expand_variables('hello_$var1.txt',context,cwd,None,-1)
 		self.assertEquals(exval,'hello_hello.txt')
 
 class VarExpansionTestCase(unittest.TestCase):

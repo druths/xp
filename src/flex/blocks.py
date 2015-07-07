@@ -16,7 +16,10 @@ def run_shell(context,cwd,content):
 	"""
 	Raises a CalledProcessError if this fails.
 	"""
-	subprocess.call('\n'.join(content),shell=True,cwd=cwd,env=get_total_context(context))
+	retcode = subprocess.call('\n'.join(content),shell=True,cwd=cwd,env=get_total_context(context))
+
+	if retcode != 0:
+		raise CalledProcessError, 'return code: %d' % retcode
 
 def run_python(context,cwd,content):
 
@@ -30,7 +33,10 @@ def run_python(context,cwd,content):
 	exec_name = context.get('PYTHON','python')
 	cmd = '%s %s' % (exec_name,tmp_filename)
 	logger.debug('using cmd: %s' % cmd)
-	subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
+	retcode = subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
+
+	if retcode != 0:
+		raise CalledProcessError, 'return code: %d' % retcode
 
 def run_gnuplot(context,cwd,content):
 	
@@ -44,5 +50,9 @@ def run_gnuplot(context,cwd,content):
 	exec_name = context.get('GNUPLOT','gnuplot')
 	cmd = '%s %s' % (exec_name,tmp_filename)
 	logger.debug('using cmd: %s' % cmd)
-	subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
+	retcode = subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
+
+	if retcode != 0:
+		raise CalledProcessError, 'return code: %d' % retcode
+
 

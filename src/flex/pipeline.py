@@ -212,8 +212,9 @@ class Pipeline:
 		self.context[PIPELINE_PREFIX_VARNAME] = self.prefix_stmt.get_prefix(self.abs_filename)
 		
 		# update all variables from statements in the preamble
+		cwd = self.abs_path()
 		for s in self.preamble:
-			s.update_context(self.context,self.get_used_pipelines())
+			s.update_context(self.context,cwd,self.get_used_pipelines())
 
 	def pre_run(self,task):
 		# initialize the prefix space if need be
@@ -283,9 +284,9 @@ class VariableAssignment:
 		self.varname = varname
 		self.value = value
 
-	def update_context(self,context,pipelines):
+	def update_context(self,context,cwd,pipelines):
 		# TODO: Keep track of the line number
-		value = expand_variables(self.value,context,pipelines,-1)
+		value = expand_variables(self.value,context,cwd,pipelines,-1)
 		logger.debug('expanded "%s" to "%s"' % (self.value,value))
 
 		context[self.varname] = value	
@@ -294,7 +295,7 @@ class DeleteVariable:
 	def __init__(self,varname):
 		self.varname = varname
 
-	def update_context(self,context,pipelines):
+	def update_context(self,context,cwd,pipelines):
 		if self.varname in context:
 			del context[self.varname]
 
@@ -456,11 +457,11 @@ class ExportBlock:
 
 	def run(self,context,pipelines,cwd):
 		# modify the context - that's all the export block can do
-		self.update_context(context,pipelines)
+		self.update_context(context,cwd,pipelines)
 
-	def update_context(self,context,pipelines):
+	def update_context(self,context,cwd,pipelines):
 		for s in self.statements:
-			s.update_context(context,pipelines)
+			s.update_context(context,cwd,pipelines)
 
 class CodeBlock:
 	def __init__(self,lang,content):
@@ -475,7 +476,7 @@ class CodeBlock:
 		# TODO: Update line numbers
 		content = []
 		for line in self.content:
-			content.append(expand_variables(line,context,pipelines,-1))
+			content.append(expand_variables(line,context,cwd,pipelines,-1))
 
 		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
@@ -690,7 +691,7 @@ def read_block_content(lines,lineno):
 variable_pattern = re.compile('([\w\d_]+|\{[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']
 
-def expand_variables(x,context,pipelines,lineno,nested=False):
+def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
 	"""
 	This function will both parse variables in the 
 	string (assumed to be one line of text) and replace them
@@ -745,7 +746,7 @@ def expand_variables(x,context,pipelines,lineno,nested=False):
 					raise ParseException(lineno,'invalid builtin function name: %s' % varname)
 
 				# process the rest of the string
-				expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,pipelines,lineno,nested=True)
+				expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,cwd,pipelines,lineno,nested=True)
 
 				x = x[:fxn_argstart_pos] + expanded_x_part
 				eofxn = fxn_argstart_pos + eofxn
@@ -758,7 +759,15 @@ def expand_variables(x,context,pipelines,lineno,nested=False):
 				# apply the function
 				ret_val = ''
 				if varname == '':
-					raise ParseException(lineno,'shell evaluations are not currently supported')
+					ret_val = subprocess.check_output(args_str,shell=True,cwd=cwd,env=blocks.get_total_context(context))
+					if ret_val[-1] == '\n':
+						ret_val = ret_val[:-1]
+
+					logger.debug('expanded shell fxn to: %s' % ret_val)
+
+					if '\n' in ret_val:
+						raise Exception, 'inline shell functions cannot return strings containing newlines: %s' % ret_val
+
 				elif varname == 'PLN':
 					prefix = None
 
