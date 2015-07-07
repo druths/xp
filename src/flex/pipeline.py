@@ -132,7 +132,7 @@ class Pipeline:
 
 				# insert the tasks before the tasks defined here
 				existing_tasks = self.tasks
-				self.tasks = map(lambda x: x.copy(), extended_pipeline.tasks)
+				self.tasks = [x.copy() for x in  extended_pipeline.tasks]
 				for t in self.tasks:
 					t.set_pipeline(self)
 				self.tasks += existing_tasks
@@ -160,8 +160,16 @@ class Pipeline:
 		# update the preamble
 		self.preamble = new_preamble
 
-		# now link up the tasks with dependencies
-		self.task_lookup = dict(map(lambda x: (x.name,x),self.tasks))
+		## now link up the tasks with dependencies
+		# storing tasks in order allows task overriding
+		self.task_lookup = dict()
+		for task in self.tasks:
+			if task.name in self.task_lookup:
+				logger.debug('task %s overloaded' % task.name)
+			self.task_lookup[task.name] = task
+		self.tasks = self.task_lookup.values()
+
+		#self.task_lookup = dict(map(lambda x: (x.name,x),self.tasks))
 
 		used_task_pattern = re.compile('^(%s)\.(%s)$' % (VAR_PATTERN,VAR_PATTERN))
 		for t in self.tasks:
