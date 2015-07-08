@@ -1,0 +1,7 @@
+
+run_awk:
+	code.awk:
+		BEGIN {
+		out = "$PLN(out.txt)"
+		print "hello" > out
+		}
