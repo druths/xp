@@ -12,16 +12,21 @@ def get_total_context(context):
 
 	return total_context
 
-def run_shell(context,cwd,content):
+def run_shell(arg_str,context,cwd,content):
 	"""
 	Raises a CalledProcessError if this fails.
 	"""
-	retcode = subprocess.call('\n'.join(content),shell=True,cwd=cwd,env=get_total_context(context))
+
+	if len(arg_str.strip()) > 0:
+		logger.warn('shell block ignoring argument string: %s' % arg_str)
+
+	retcode = subprocess.call('\n'.join(content),shell=True,
+							  cwd=cwd,env=get_total_context(context))
 
 	if retcode != 0:
 		raise CalledProcessError, 'return code: %d' % retcode
 
-def run_python(context,cwd,content):
+def run_python(arg_str,context,cwd,content):
 
 	# write python code to a tmp file
 	fh,tmp_filename = tempfile.mkstemp(suffix='py')
@@ -31,14 +36,14 @@ def run_python(context,cwd,content):
 	logger.debug('wrote python content to %s' % tmp_filename)
 	
 	exec_name = context.get('PYTHON','python')
-	cmd = '%s %s' % (exec_name,tmp_filename)
+	cmd = '%s %s %s' % (exec_name,arg_str,tmp_filename)
 	logger.debug('using cmd: %s' % cmd)
 	retcode = subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
 
 	if retcode != 0:
 		raise CalledProcessError, 'return code: %d' % retcode
 
-def run_gnuplot(context,cwd,content):
+def run_gnuplot(arg_str,context,cwd,content):
 	
 	# write gnuplot code to a tmp file
 	fh,tmp_filename = tempfile.mkstemp(suffix='gp')
@@ -48,11 +53,23 @@ def run_gnuplot(context,cwd,content):
 	logger.debug('wrote gnuplot content to %s' % tmp_filename)
 	
 	exec_name = context.get('GNUPLOT','gnuplot')
-	cmd = '%s %s' % (exec_name,tmp_filename)
+	cmd = '%s %s %s' % (exec_name,arg_str,tmp_filename)
 	logger.debug('using cmd: %s' % cmd)
-	retcode = subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
+	retcode = subprocess.call(cmd,shell=True,
+				cwd=cwd,env=get_total_context(context))
 
 	if retcode != 0:
 		raise CalledProcessError, 'return code: %d' % retcode
 
+def run_test(arg_str,context,cwd,content):
+	
+	# create all fils in the arg str
+	for fname in arg_str.split():
+		fh = open(fname,'w')
+		fh.close()
 
+	# echo the content
+	print '\n'.join(content)
+
+	# done
+	return

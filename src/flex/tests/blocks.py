@@ -8,6 +8,19 @@ BASE_PATH = os.path.dirname(__file__)
 def get_complete_filename(fname):
 	return os.path.join(BASE_PATH,'pipelines',fname)
 
+class BlockArgStringTestCase(unittest.TestCase):
+
+	def test_basic1(self):
+		p = get_pipeline(get_complete_filename('argstr_basic1'),
+						default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks()
+		p.run()
+
+		fname = get_complete_filename('argstr_basic1_a1.txt')
+
+		self.assertTrue(os.path.exists(fname))
+		os.remove(fname)
+
 class GnuplotTestCase(unittest.TestCase):
 	
 	def test_basic1(self):

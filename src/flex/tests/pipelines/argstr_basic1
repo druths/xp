@@ -1,0 +1,4 @@
+
+task1:
+	code.test: $PLN(a1.txt)
+		blargh

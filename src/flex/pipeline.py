@@ -19,6 +19,8 @@ DIR_PREFIX = 'dir'
 
 USE_FILE_PREFIX = (FILE_PREFIX,None)
 
+LANG_FXN_LOOKUP = {'sh':'run_shell', 'py':'run_python',
+					'gnuplot':'run_gnuplot','test':'run_test'}
 
 #################
 # the factory function 
@@ -464,14 +466,20 @@ class ExportBlock:
 			s.update_context(context,cwd,pipelines)
 
 class CodeBlock:
-	def __init__(self,lang,content):
+	def __init__(self,lang,arg_str,content):
 		self.lang = lang
+		self.arg_str = arg_str
 		self.content = content
 
 	def copy(self):
-		return CodeBlock(self.lang,self.content)
+		return CodeBlock(self.lang,self.arg_str,self.content)
 
 	def run(self,context,pipelines,cwd):
+
+		# expand any variables in the argument string
+		# TODO: Update line numbers
+		arg_str = expand_variables(self.arg_str,context,cwd,pipelines,-1)
+
 		# expand any variables in the content
 		# TODO: Update line numbers
 		content = []
@@ -480,16 +488,12 @@ class CodeBlock:
 
 		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
-		if self.lang == 'sh':
+		if self.lang in LANG_FXN_LOOKUP:
+			run_template = 'blocks.%s(arg_str,context,cwd,content)'  
 			try:
-				blocks.run_shell(context,cwd,content)
+				exec(run_template % LANG_FXN_LOOKUP[self.lang])
 			except subprocess.CalledProcessError:
 				raise BlockFailed
-
-		elif self.lang == 'py':
-			blocks.run_python(context,cwd,content)
-		elif self.lang == 'gnuplot':
-			blocks.run_gnuplot(context,cwd,content)
 		else:
 			raise BlockFailed, 'unknown block type: %s' % self.lang
 
@@ -615,8 +619,8 @@ def parse_task(task_name,dep_str,lines,lineno):
 	valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
 	var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
 	delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
-	code_pattern = re.compile('^\tcode\.(\w+):$')
-	export_pattern = re.compile('^\texport:$')
+	code_pattern = re.compile('^\tcode\.(\w+):(.*)$')
+	export_pattern = re.compile('^\texport:(.*)$')
 
 	# parse the dependency list
 	dependencies = dep_str.split()
@@ -638,12 +642,18 @@ def parse_task(task_name,dep_str,lines,lineno):
 
 		if mc:
 			lang = mc.group(1)
+			arg_str = mc.group(2)
 			logger.debug('found code block at line %d' % lineno)
 			lineno,content = read_block_content(lines,lineno+1)
 
-			blocks.append(CodeBlock(lang,content))
+			blocks.append(CodeBlock(lang,arg_str,content))
 		elif me:
+			arg_str = me.group(1).strip()
 			logger.debug('found export block at line %d' % lineno)
+
+			if len(arg_str) > 0:
+				raise ParseException(lineno,
+					'export block does not accept an argument string')
 
 			new_lineno,content = read_block_content(lines,lineno+1)
 			
