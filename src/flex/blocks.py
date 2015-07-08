@@ -61,6 +61,24 @@ def run_gnuplot(arg_str,context,cwd,content):
 	if retcode != 0:
 		raise CalledProcessError, 'return code: %d' % retcode
 
+def run_awk(arg_str,context,cwd,content):
+	
+	# write awk code to a tmp file
+	fh,tmp_filename = tempfile.mkstemp(suffix='awk')
+	os.write(fh,'\n'.join(content))
+	os.close(fh)
+
+	logger.debug('wrote awk content to %s' % tmp_filename)
+	
+	exec_name = context.get('AWK','awk')
+	cmd = '%s -f %s %s' % (exec_name,tmp_filename,arg_str)
+	logger.debug('using cmd: %s' % cmd)
+	retcode = subprocess.call(cmd,shell=True,
+				cwd=cwd,env=get_total_context(context))
+
+	if retcode != 0:
+		raise CalledProcessError, 'return code: %d' % retcode
+
 def run_test(arg_str,context,cwd,content):
 	
 	# create all fils in the arg str

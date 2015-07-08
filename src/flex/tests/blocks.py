@@ -21,6 +21,19 @@ class BlockArgStringTestCase(unittest.TestCase):
 		self.assertTrue(os.path.exists(fname))
 		os.remove(fname)
 
+class AwkTestCase(unittest.TestCase):
+
+	def test_awk1(self):
+		p = get_pipeline(get_complete_filename('awk1'),
+						default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks()
+		p.run()
+
+		fname = get_complete_filename('awk1_out.txt')
+
+		self.assertTrue(os.path.exists(fname))
+		os.remove(fname)
+
 class GnuplotTestCase(unittest.TestCase):
 	
 	def test_basic1(self):

@@ -19,8 +19,11 @@ DIR_PREFIX = 'dir'
 
 USE_FILE_PREFIX = (FILE_PREFIX,None)
 
-LANG_FXN_LOOKUP = {'sh':'run_shell', 'py':'run_python',
-					'gnuplot':'run_gnuplot','test':'run_test'}
+LANG_FXN_LOOKUP = {	'sh':'run_shell', 
+					'py':'run_python',
+					'gnuplot':'run_gnuplot',
+					'test':'run_test',
+					'awk':'run_awk'}
 
 #################
 # the factory function 
