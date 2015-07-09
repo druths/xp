@@ -5,9 +5,17 @@ Feature TODO list
 v0.1
 ----
 
-	* Resolve the question of how forcing marked tasks and dependencies work
+	* Write documentation
 
-	* Create Twitter account and stacktrack space
+	* Write tutorial blog post
+
+	* Make minor webpage: flex.derekruths.com or flex.networkdynamics.org
+
+	* Make Stackoverflow space
+
+	* Post to Reddit
+
+	* Post to Twitter
 
 v0.2
 ----

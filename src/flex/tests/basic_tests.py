@@ -1,5 +1,5 @@
 import unittest
-from flex.pipeline import get_pipeline, USE_FILE_PREFIX
+from flex.pipeline import *
 import flex.pipeline as pipeline
 import os, os.path
 
@@ -125,3 +125,165 @@ class BasicTestCase(unittest.TestCase):
 		os.remove(get_complete_filename('use1_3.txt'))	
 
 		p.unmark_all_tasks(recur=True)
+
+class ForceTestCase(unittest.TestCase):
+
+	def test_no_passthrough(self):
+		p = get_pipeline(get_complete_filename('force_test'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t1_file = get_complete_filename('force_test_t1.txt')
+		t1 = p.get_task('task1')
+		t2_file = get_complete_filename('force_test_t2.txt')
+		t2 = p.get_task('task2')
+		t3_file = get_complete_filename('force_test_t3.txt')
+		t3 = p.get_task('task3')
+			
+		# clear out the products of this pipeline
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		# mark tasks
+		t2.mark()
+
+		# run task 3
+		t3.run(force=FORCE_NONE)
+
+		# check the output
+		self.assertFalse(os.path.exists(t1_file))
+		self.assertFalse(os.path.exists(t2_file))
+		self.assertTrue(os.path.exists(t3_file))
+
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		p.unmark_all_tasks(recur=True)
+
+	def test_force_none(self):
+		p = get_pipeline(get_complete_filename('force_test'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t1_file = get_complete_filename('force_test_t1.txt')
+		t1 = p.get_task('task1')
+		t2_file = get_complete_filename('force_test_t2.txt')
+		t2 = p.get_task('task2')
+		t3_file = get_complete_filename('force_test_t3.txt')
+		t3 = p.get_task('task3')
+			
+		# clear out the products of this pipeline
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		# mark tasks
+		t3.mark()
+
+		# run task 3
+		t3.run(force=FORCE_NONE)
+
+		# check the output
+		self.assertFalse(os.path.exists(t1_file))
+		self.assertFalse(os.path.exists(t2_file))
+		self.assertFalse(os.path.exists(t3_file))
+
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		p.unmark_all_tasks(recur=True)
+
+	def test_force_top(self):
+		p = get_pipeline(get_complete_filename('force_test'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t1_file = get_complete_filename('force_test_t1.txt')
+		t1 = p.get_task('task1')
+		t2_file = get_complete_filename('force_test_t2.txt')
+		t2 = p.get_task('task2')
+		t3_file = get_complete_filename('force_test_t3.txt')
+		t3 = p.get_task('task3')
+			
+		# clear out the products of this pipeline
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		# mark tasks
+		t1.mark()
+		t3.mark()
+
+		# run task 3
+		t3.run(force=FORCE_TOP)
+
+		# check the output
+		self.assertFalse(os.path.exists(t1_file))
+		self.assertTrue(os.path.exists(t2_file))
+		self.assertTrue(os.path.exists(t3_file))
+
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		p.unmark_all_tasks(recur=True)
+
+	def test_force_all(self):
+		p = get_pipeline(get_complete_filename('force_test'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t1_file = get_complete_filename('force_test_t1.txt')
+		t1 = p.get_task('task1')
+		t2_file = get_complete_filename('force_test_t2.txt')
+		t2 = p.get_task('task2')
+		t3_file = get_complete_filename('force_test_t3.txt')
+		t3 = p.get_task('task3')
+			
+		# clear out the products of this pipeline
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		# mark tasks
+		t1.mark()
+		t2.mark()
+		t3.mark()
+
+		# run task 3
+		t3.run(force=FORCE_ALL)
+
+		# check the output
+		self.assertTrue(os.path.exists(t1_file))
+		self.assertTrue(os.path.exists(t2_file))
+		self.assertTrue(os.path.exists(t3_file))
+
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		p.unmark_all_tasks(recur=True)
+

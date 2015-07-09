@@ -25,6 +25,12 @@ LANG_FXN_LOOKUP = {	'sh':'run_shell',
 					'test':'run_test',
 					'awk':'run_awk'}
 
+# Values for the force argument in run(...) methods
+FORCE_NONE = 'dont_force'
+FORCE_TOP = 'force_top'
+FORCE_ALL = 'force_all'
+FORCE_CHOICES = [FORCE_NONE,FORCE_TOP,FORCE_ALL]
+
 #################
 # the factory function 
 _pipelines = {}
@@ -53,11 +59,9 @@ def get_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
 ########################
 # Functions to handle the dependency graph
 
-def get_visitation_list(all_tasks):
+def get_leaves(all_tasks):
 	"""
-	Return an ordered list of tasks, with roots first, leaves last.
-	Each element in the visitation list, V[i], is a tuple (task,depth)
-	where a higher depth indicates being closer to a root.
+	Return a list of the leaf tasks (those that no other tasks are dependent on).
 	"""
 	# find the leaves
 	all_deps = set()
@@ -65,6 +69,16 @@ def get_visitation_list(all_tasks):
 		all_deps.update(t.get_deps())
 
 	leaves = set(all_tasks).difference(all_deps)
+
+	return leaves
+
+def get_visitation_list(all_tasks):
+	"""
+	Return an ordered list of tasks, with roots first, leaves last.
+	Each element in the visitation list, V[i], is a tuple (task,depth)
+	where a higher depth indicates being closer to a root.
+	"""
+	leaves = get_leaves(all_tasks)
 	
 	# put tasks into layers
 	depth = 0
@@ -275,12 +289,11 @@ class Pipeline:
 			for pipeline in self.used_pipelines.values():
 				pipeline.unmark_all_tasks(recur=True)
 
-	def run(self):
+	def run(self,force=FORCE_NONE):
 		self.build_context()	
 
-		# TODO: We could optimize this by picking the right
-		# tasks first - some sort of graphical sort
-		for t in self.tasks:
+		# run the leaf tasks - this will trigger other tasks as needed
+		for t in get_leaves(self.tasks):
 			logger.debug('running task %s' % t.name)
 			t.run()
 	
@@ -423,23 +436,24 @@ class Task:
 			logger.debug('returning ts for mark file: %s' % self.mark_file())
 			return os.path.getmtime(self.mark_file())
 
-	def run(self,force=False,skip_dependencies=False):
+	def run(self,force=FORCE_NONE):
 
 		self.pipeline.pre_run(self)
 
+		assert force in FORCE_CHOICES 
+
 		logger.debug('task %s: marked = %d' % (self.name,self.is_marked()))
-		if not force and self.is_marked():
+		if force == FORCE_NONE and self.is_marked():
 			logger.info('task %s is marked, skipping' % self.name)
 			return
 
 		# first run all dependencies
-		if not skip_dependencies:
-			logger.debug('task %s: run dependencies' % self.name)
-			for d in self._dependencies:
-				d.run(skip_dependencies)
-		else:
-			logger.debug('task %s: skipping dependencies' % self.name)
+		dep_force = FORCE_ALL if force == FORCE_ALL else FORCE_NONE
+		logger.debug('task %s: run dependencies' % self.name)
+		for d in self._dependencies:
+			d.run(force=dep_force)
 		
+		# get ready to run this task
 		context = self.pipeline.get_context()
 		pipelines = self.pipeline.get_used_pipelines()
 		cwd = self.pipeline.abs_path()

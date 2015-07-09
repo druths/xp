@@ -125,26 +125,30 @@ def do_dry_run(args):
 
 def do_run(args):
 	parser = argparse.ArgumentParser('fx run',description='run a flex pipeline')
-	parser.add_argument('-f','--force',action='store_true',default=False,help='force the task to run, even if it is already marked')
+	parser.add_argument('-f','--force',choices=['NONE','TOP','ALL'],default='NONE',
+		help='force tasks to run, even if they is already marked. NONE will not force any marked tasks to run; TOP will force the named task or the top-level tasks in the pipeline to run; ALL will force all marked tasks encountered in the dependency tree to run.')
 	parser.add_argument('pipeline_file',help='the pipeline to run')
 	parser.add_argument('task_name',nargs='?',help='the specific task to run. If omitted, the entire pipeline will be run')
 
 	
 	args = parser.parse_args(args)
 
+	force_val_lookup = {'NONE':FORCE_NONE, 'TOP':FORCE_TOP, 'ALL':FORCE_ALL}
+	force_val = force_val_lookup[args.force]
+
 	# load the pipeline
 	p = get_pipeline(args.pipeline_file)
 
 	if not args.task_name:
 		# run the whole pipeline
-		p.run()
+		p.run(force=force_val)
 	else:
 		t = p.get_task(args.task_name)
 
 		if t is None:
 			logger.error('task %s does not exist' % tname)
 		else:
-			t.run(force=args.force)
+			t.run(force=force_val)
 
 def main():
 	parser = argparse.ArgumentParser('fx')
