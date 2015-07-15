@@ -1,4 +1,5 @@
 import subprocess
+from subprocess import CalledProcessError
 import tempfile
 import os, os.path
 import logging
@@ -20,11 +21,12 @@ def run_shell(arg_str,context,cwd,content):
 	if len(arg_str.strip()) > 0:
 		logger.warn('shell block ignoring argument string: %s' % arg_str)
 
-	retcode = subprocess.call('\n'.join(content),shell=True,
+	cmd = '\n'.join(content)
+	retcode = subprocess.call(cmd,shell=True,
 							  cwd=cwd,env=get_total_context(context))
 
 	if retcode != 0:
-		raise CalledProcessError, 'return code: %d' % retcode
+		raise CalledProcessError(retcode,cmd,None)
 
 def run_python(arg_str,context,cwd,content):
 
@@ -41,7 +43,7 @@ def run_python(arg_str,context,cwd,content):
 	retcode = subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
 
 	if retcode != 0:
-		raise CalledProcessError, 'return code: %d' % retcode
+		raise CalledProcessError(retcode,cmd,None)
 
 def run_gnuplot(arg_str,context,cwd,content):
 	
@@ -59,7 +61,7 @@ def run_gnuplot(arg_str,context,cwd,content):
 				cwd=cwd,env=get_total_context(context))
 
 	if retcode != 0:
-		raise CalledProcessError, 'return code: %d' % retcode
+		raise CalledProcessError(retcode,cmd,None)
 
 def run_awk(arg_str,context,cwd,content):
 	
@@ -77,7 +79,7 @@ def run_awk(arg_str,context,cwd,content):
 				cwd=cwd,env=get_total_context(context))
 
 	if retcode != 0:
-		raise CalledProcessError, 'return code: %d' % retcode
+		raise CalledProcessError(retcode,cmd,None)
 
 def run_test(arg_str,context,cwd,content):
 	

@@ -3,7 +3,7 @@ import argparse
 import logging
 import time
 
-from flex.pipeline import get_pipeline
+from flex.pipeline import *
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -166,6 +166,8 @@ def main():
 	logger.debug('running command: %s' % args.command)
 	try:
 		eval('do_%s(args.cmd_args)' % args.command)
+	except ParseException as e:
+		logging.exception('parsing error on line %d: %s' % (e.lineno,e.message))
 	except Exception as e:
 		logging.exception('command %s failed' % args.command)
 

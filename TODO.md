@@ -5,6 +5,8 @@ Feature TODO list
 v0.1
 ----
 
+	* Add lineno support in variable expansions
+
 	* Write documentation
 
 	* Write tutorial blog post
