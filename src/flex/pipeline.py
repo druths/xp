@@ -860,7 +860,7 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 
 				if varname not in context:
 					raise UnknownVariableException(source_file,lineno,'variable %s does not exist' % varname)
-	
+
 				replacement = context[varname]	
 	
 				# make the replacement

@@ -84,6 +84,15 @@ class InnerVarExpansionTestCase(unittest.TestCase):
 		exval = expand_variables('hello_$var1.txt',context,cwd,None,None,-1)
 		self.assertEquals(exval,'hello_hello.txt')
 
+	def test_grep_error(self):
+		cmd = """grep -o '/article/[^"]+' $PLN(lists_html/\$TAG.*) > $PLN(article_lists/\$TAG.txt)"""
+		cwd = '.'
+		context = {PIPELINE_PREFIX_VARNAME:'/foo/bar_'}
+
+		exval = expand_variables(cmd,context,cwd,None,None,-1)
+		
+		# this should get here without an exception...
+
 class VarExpansionTestCase(unittest.TestCase):
 	
 	def test_varexpand1(self):
