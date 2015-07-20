@@ -116,7 +116,10 @@ class Pipeline:
 		self.abs_filename = abs_filename
 		self.preamble = preamble_stmts
 		self.tasks = tasks
+
+		default_prefix = list(default_prefix) + [-1]
 		self.prefix_stmt = PrefixStatement(*default_prefix)
+
 		self.used_pipelines = None
 
 		for t in self.tasks:
@@ -298,9 +301,10 @@ class Pipeline:
 			t.run()
 	
 class VariableAssignment:
-	def __init__(self,varname,value):
+	def __init__(self,varname,value,lineno):
 		self.varname = varname
 		self.value = value
+		self.lineno = lineno
 
 	def update_context(self,context,cwd,pipelines):
 		# TODO: Keep track of the line number
@@ -310,16 +314,18 @@ class VariableAssignment:
 		context[self.varname] = value	
 
 class DeleteVariable:
-	def __init__(self,varname):
+	def __init__(self,varname,lineno):
 		self.varname = varname
+		self.lineno = lineno
 
 	def update_context(self,context,cwd,pipelines):
 		if self.varname in context:
 			del context[self.varname]
 
 class PrefixStatement:
-	def __init__(self,prefix_type,prefix):
+	def __init__(self,prefix_type,prefix,lineno):
 		self.prefix_type = prefix_type
+		self.lineno = lineno
 
 		self.prefix = prefix
 
@@ -374,28 +380,32 @@ class PrefixStatement:
 			raise Exception, 'unknown prefix type: %s' % self.prefix_type
 
 class ExtendStatement:
-	def __init__(self,filename):
+	def __init__(self,filename,lineno):
 		self.filename = filename
+		self.lineno = lineno
 		
 class UseStatement: 
-	def __init__(self,filename,alias=None): 
+	def __init__(self,filename,lineno,alias=None): 
 		self.filename = filename 
+		self.lineno = lineno
+
 		if alias is not None: 
 			self.alias = alias 
 		else: 
 			self.alias = filename
 
 class Task:
-	def __init__(self,name,dep_names,blocks):
+	def __init__(self,name,dep_names,blocks,lineno):
 		self.name = name
 		self.dep_names = dep_names
 		self.blocks = blocks
+		self.lineno = lineno
 
 		self._dependencies = []
 
 	def copy(self):
 		blocks = map(lambda x: x.copy(), self.blocks)
-		return Task(self.name,self.dep_names,blocks)
+		return Task(self.name,self.dep_names,blocks,self.lineno)
 
 	def set_pipeline(self,pipeline):
 		self.pipeline = pipeline
@@ -468,11 +478,12 @@ class Task:
 		self.mark()
 
 class ExportBlock:
-	def __init__(self,statements):
+	def __init__(self,statements,lineno):
 		self.statements = statements
+		self.lineno = lineno
 
 	def copy(self):
-		return ExportBlock(self.statements)
+		return ExportBlock(self.statements,self.lineno)
 
 	def run(self,context,pipelines,cwd):
 		# modify the context - that's all the export block can do
@@ -483,25 +494,27 @@ class ExportBlock:
 			s.update_context(context,cwd,pipelines)
 
 class CodeBlock:
-	def __init__(self,lang,arg_str,content):
+	def __init__(self,lang,arg_str,content,lineno):
 		self.lang = lang
 		self.arg_str = arg_str
 		self.content = content
+		self.lineno = lineno
 
 	def copy(self):
-		return CodeBlock(self.lang,self.arg_str,self.content)
+		return CodeBlock(self.lang,self.arg_str,self.content,self.lineno)
 
 	def run(self,context,pipelines,cwd):
 
 		# expand any variables in the argument string
 		# TODO: Update line numbers
-		arg_str = expand_variables(self.arg_str,context,cwd,pipelines,-1)
+		arg_str = expand_variables(self.arg_str,context,cwd,pipelines,
+									self.lineno)
 
 		# expand any variables in the content
 		# TODO: Update line numbers
 		content = []
-		for line in self.content:
-			content.append(expand_variables(line,context,cwd,pipelines,-1))
+		for i,line in enumerate(self.content,1):
+			content.append(expand_variables(line,context,cwd,pipelines,self.lineno+i))
 
 		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
@@ -521,7 +534,8 @@ class ParseException(Exception):
 	
 	def __init__(self,lineno,message):
 		Exception.__init__(self,message)
-		self.lineno = lineno
+		self.lineno = lineno+1 # all internal line numbers are index 0
+
 
 class VariableValueException(Exception):
 	
@@ -556,23 +570,23 @@ def parse_pipeline(pipeline_file,default_prefix):
 			# load in the pipeline
 			fname = m.group(1)
 			complete_fname = os.path.join(os.path.dirname(pipeline_file),fname)
-			statements.append(ExtendStatement(complete_fname))
+			statements.append(ExtendStatement(complete_fname,lineno))
 		else:
 			m = var_assign_pattern.match(cur_line)
 			if m:
 				logger.debug('found variable assignment: %s,%s' % (m.group(1),m.group(2)))
-				statements.append(VariableAssignment(m.group(1),m.group(2)))
+				statements.append(VariableAssignment(m.group(1),m.group(2),lineno))
 			else:
 				m = var_del_pattern.match(cur_line)
 				if m:
 					logger.debug('found delete variable: %s' % m.group(1))
-					statements.append(DeleteVariable(m.group(1)))
+					statements.append(DeleteVariable(m.group(1),lineno))
 				else:
 					m = use_pattern.match(cur_line)
 					if m:
 						alias = m.group(3)
 						logger.debug('found use: %s,%s' % (m.group(1),str(m.group(3))))
-						statements.append(UseStatement(m.group(1),alias))
+						statements.append(UseStatement(m.group(1),lineno,alias))
 					else:
 						m = prefix_pattern.match(cur_line)
 						if m:
@@ -585,7 +599,7 @@ def parse_pipeline(pipeline_file,default_prefix):
 									prefix = None
 
 							logger.debug('found prefix: %s, %s' % (prefix_type,prefix))
-							statements.append(PrefixStatement(prefix_type,prefix))
+							statements.append(PrefixStatement(prefix_type,prefix,lineno))
 						elif len(cur_line) == 0 or cur_line.startswith('#'):
 							pass
 						else:
@@ -639,6 +653,8 @@ def parse_task(task_name,dep_str,lines,lineno):
 	code_pattern = re.compile('^\tcode\.(\w+):(.*)$')
 	export_pattern = re.compile('^\texport:(.*)$')
 
+	start_lineno = lineno
+
 	# parse the dependency list
 	dependencies = dep_str.split()
 	
@@ -661,12 +677,14 @@ def parse_task(task_name,dep_str,lines,lineno):
 			lang = mc.group(1)
 			arg_str = mc.group(2)
 			logger.debug('found code block at line %d' % lineno)
+			block_lineno = lineno
 			lineno,content = read_block_content(lines,lineno+1)
 
-			blocks.append(CodeBlock(lang,arg_str,content))
+			blocks.append(CodeBlock(lang,arg_str,content,block_lineno))
 		elif me:
 			arg_str = me.group(1).strip()
 			logger.debug('found export block at line %d' % lineno)
+			export_lineno = lineno
 
 			if len(arg_str) > 0:
 				raise ParseException(lineno,
@@ -681,20 +699,20 @@ def parse_task(task_name,dep_str,lines,lineno):
 				ma = var_assignment_pattern.match(line)
 				md = delete_var_pattern.match(line)
 				if ma:
-					statements.append(VariableAssignment(ma.group(1),ma.group(2)))
+					statements.append(VariableAssignment(ma.group(1),ma.group(2),export_lineno+i+1))
 				elif md:
-					statements.append(DeleteVariable(ma.group(1)))
+					statements.append(DeleteVariable(ma.group(1),export_lineno+i+1))
 				elif len(line) == 0:
 					pass
 				else:
-					raise ParseException(lineno+1+i,'expected a variable assignment, got: %s' % line)
+					raise ParseException(export_lineno+1+i,'expected a variable assignment, got: %s' % line)
 
-			blocks.append(ExportBlock(statements))
+			blocks.append(ExportBlock(statements,export_lineno))
 			lineno = new_lineno
 		else:
 			in_task = False	
 
-	return lineno,Task(task_name,dependencies,blocks)
+	return lineno,Task(task_name,dependencies,blocks,start_lineno)
 
 def read_block_content(lines,lineno):
 	"""

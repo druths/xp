@@ -287,3 +287,17 @@ class ForceTestCase(unittest.TestCase):
 
 		p.unmark_all_tasks(recur=True)
 
+class LineNoTestCase(unittest.TestCase):
+
+	def test_varexpands1(self):
+		p = get_pipeline(get_complete_filename('lineno1'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		try:
+			p.run()
+		except ParseException as e:
+			self.assertEquals(e.lineno,4)
+
+		return
+
