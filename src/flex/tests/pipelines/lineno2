@@ -1,0 +1,5 @@
+use lineno1
+
+task2: lineno1.task1
+	code.sh:
+		echo "hi"

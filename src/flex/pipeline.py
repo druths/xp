@@ -117,7 +117,7 @@ class Pipeline:
 		self.preamble = preamble_stmts
 		self.tasks = tasks
 
-		default_prefix = list(default_prefix) + [-1]
+		default_prefix = list(default_prefix) + ['',-1]
 		self.prefix_stmt = PrefixStatement(*default_prefix)
 
 		self.used_pipelines = None
@@ -301,21 +301,23 @@ class Pipeline:
 			t.run()
 	
 class VariableAssignment:
-	def __init__(self,varname,value,lineno):
+	def __init__(self,varname,value,source_file,lineno):
 		self.varname = varname
 		self.value = value
+		self.source_file = source_file
 		self.lineno = lineno
 
 	def update_context(self,context,cwd,pipelines):
 		# TODO: Keep track of the line number
-		value = expand_variables(self.value,context,cwd,pipelines,-1)
+		value = expand_variables(self.value,context,cwd,pipelines,self.source_file,self.lineno)
 		logger.debug('expanded "%s" to "%s"' % (self.value,value))
 
 		context[self.varname] = value	
 
 class DeleteVariable:
-	def __init__(self,varname,lineno):
+	def __init__(self,varname,source_file,lineno):
 		self.varname = varname
+		self.source_file = source_file
 		self.lineno = lineno
 
 	def update_context(self,context,cwd,pipelines):
@@ -323,8 +325,9 @@ class DeleteVariable:
 			del context[self.varname]
 
 class PrefixStatement:
-	def __init__(self,prefix_type,prefix,lineno):
+	def __init__(self,prefix_type,prefix,source_file,lineno):
 		self.prefix_type = prefix_type
+		self.source_file = source_file
 		self.lineno = lineno
 
 		self.prefix = prefix
@@ -380,12 +383,14 @@ class PrefixStatement:
 			raise Exception, 'unknown prefix type: %s' % self.prefix_type
 
 class ExtendStatement:
-	def __init__(self,filename,lineno):
+	def __init__(self,filename,source_file,lineno):
 		self.filename = filename
+		self.source_file = source_file
 		self.lineno = lineno
 		
 class UseStatement: 
-	def __init__(self,filename,lineno,alias=None): 
+	def __init__(self,filename,source_file,lineno,alias=None): 
+		self.source_file = source_file
 		self.filename = filename 
 		self.lineno = lineno
 
@@ -395,17 +400,18 @@ class UseStatement:
 			self.alias = filename
 
 class Task:
-	def __init__(self,name,dep_names,blocks,lineno):
+	def __init__(self,name,dep_names,blocks,source_file,lineno):
 		self.name = name
 		self.dep_names = dep_names
 		self.blocks = blocks
+		self.source_file = source_file
 		self.lineno = lineno
 
 		self._dependencies = []
 
 	def copy(self):
 		blocks = map(lambda x: x.copy(), self.blocks)
-		return Task(self.name,self.dep_names,blocks,self.lineno)
+		return Task(self.name,self.dep_names,blocks,self.source_file,self.lineno)
 
 	def set_pipeline(self,pipeline):
 		self.pipeline = pipeline
@@ -478,12 +484,13 @@ class Task:
 		self.mark()
 
 class ExportBlock:
-	def __init__(self,statements,lineno):
+	def __init__(self,statements,source_file,lineno):
 		self.statements = statements
+		self.source_file = source_file
 		self.lineno = lineno
 
 	def copy(self):
-		return ExportBlock(self.statements,self.lineno)
+		return ExportBlock(self.statements,self.source_file,self.lineno)
 
 	def run(self,context,pipelines,cwd):
 		# modify the context - that's all the export block can do
@@ -494,27 +501,28 @@ class ExportBlock:
 			s.update_context(context,cwd,pipelines)
 
 class CodeBlock:
-	def __init__(self,lang,arg_str,content,lineno):
+	def __init__(self,lang,arg_str,content,source_file,lineno):
 		self.lang = lang
 		self.arg_str = arg_str
 		self.content = content
+		self.source_file = source_file
 		self.lineno = lineno
 
 	def copy(self):
-		return CodeBlock(self.lang,self.arg_str,self.content,self.lineno)
+		return CodeBlock(self.lang,self.arg_str,self.content,self.source_file,self.lineno)
 
 	def run(self,context,pipelines,cwd):
 
 		# expand any variables in the argument string
 		# TODO: Update line numbers
 		arg_str = expand_variables(self.arg_str,context,cwd,pipelines,
-									self.lineno)
+									self.source_file,self.lineno)
 
 		# expand any variables in the content
 		# TODO: Update line numbers
 		content = []
 		for i,line in enumerate(self.content,1):
-			content.append(expand_variables(line,context,cwd,pipelines,self.lineno+i))
+			content.append(expand_variables(line,context,cwd,pipelines,self.source_file,self.lineno+i))
 
 		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
@@ -532,15 +540,17 @@ class BlockFailed(Exception):
 
 class ParseException(Exception):
 	
-	def __init__(self,lineno,message):
+	def __init__(self,source_file,lineno,message):
 		Exception.__init__(self,message)
+		self.source_file = source_file
 		self.lineno = lineno+1 # all internal line numbers are index 0
 
 
-class VariableValueException(Exception):
+class UnknownVariableException(Exception):
 	
-	def __init__(self,lineno,message):
+	def __init__(self,source_file,lineno,message):
 		Exception.__init__(self,message)
+		self.source_file = source_file
 		self.lineno = lineno
 
 VAR_PATTERN = '\w[\w\d_]*'
@@ -570,23 +580,23 @@ def parse_pipeline(pipeline_file,default_prefix):
 			# load in the pipeline
 			fname = m.group(1)
 			complete_fname = os.path.join(os.path.dirname(pipeline_file),fname)
-			statements.append(ExtendStatement(complete_fname,lineno))
+			statements.append(ExtendStatement(complete_fname,pipeline_file,lineno))
 		else:
 			m = var_assign_pattern.match(cur_line)
 			if m:
 				logger.debug('found variable assignment: %s,%s' % (m.group(1),m.group(2)))
-				statements.append(VariableAssignment(m.group(1),m.group(2),lineno))
+				statements.append(VariableAssignment(m.group(1),m.group(2),pipeline_file,lineno))
 			else:
 				m = var_del_pattern.match(cur_line)
 				if m:
 					logger.debug('found delete variable: %s' % m.group(1))
-					statements.append(DeleteVariable(m.group(1),lineno))
+					statements.append(DeleteVariable(m.group(1),pipeline_file,lineno))
 				else:
 					m = use_pattern.match(cur_line)
 					if m:
 						alias = m.group(3)
 						logger.debug('found use: %s,%s' % (m.group(1),str(m.group(3))))
-						statements.append(UseStatement(m.group(1),lineno,alias))
+						statements.append(UseStatement(m.group(1),pipeline_file,lineno,alias))
 					else:
 						m = prefix_pattern.match(cur_line)
 						if m:
@@ -599,7 +609,7 @@ def parse_pipeline(pipeline_file,default_prefix):
 									prefix = None
 
 							logger.debug('found prefix: %s, %s' % (prefix_type,prefix))
-							statements.append(PrefixStatement(prefix_type,prefix,lineno))
+							statements.append(PrefixStatement(prefix_type,prefix,pipeline_file,lineno))
 						elif len(cur_line) == 0 or cur_line.startswith('#'):
 							pass
 						else:
@@ -625,11 +635,11 @@ def parse_pipeline(pipeline_file,default_prefix):
 
 				logger.debug('parsing task: %s' % task_name)
 
-				lineno,task = parse_task(task_name,dep_str,lines,lineno)
+				lineno,task = parse_task(task_name,dep_str,lines,pipeline_file,lineno)
 
 				tasks.append(task)
 			else:
-				raise ParseException(lineno,'expected a task definition, got: %s' % cur_line)
+				raise ParseException(pipeline_file,lineno,'expected a task definition, got: %s' % cur_line)
 
 	# make the pipeline
 	pipeline = Pipeline(pipeline_file,statements,tasks,default_prefix=default_prefix)
@@ -637,7 +647,7 @@ def parse_pipeline(pipeline_file,default_prefix):
 	# return the pipeline
 	return pipeline
 
-def parse_task(task_name,dep_str,lines,lineno):
+def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	"""
 	Parse the task.
 
@@ -660,7 +670,7 @@ def parse_task(task_name,dep_str,lines,lineno):
 	
 	for dep in dependencies:
 		if valid_dep_string.match(dep) is None:
-			raise ParseException(lineno,'expected a dependency, got: %s' % dep)
+			raise ParseException(pipeline_file,lineno,'expected a dependency, got: %s' % dep)
 
 	lineno += 1
 	# now parse blocks
@@ -680,14 +690,14 @@ def parse_task(task_name,dep_str,lines,lineno):
 			block_lineno = lineno
 			lineno,content = read_block_content(lines,lineno+1)
 
-			blocks.append(CodeBlock(lang,arg_str,content,block_lineno))
+			blocks.append(CodeBlock(lang,arg_str,content,pipeline_file,block_lineno))
 		elif me:
 			arg_str = me.group(1).strip()
 			logger.debug('found export block at line %d' % lineno)
 			export_lineno = lineno
 
 			if len(arg_str) > 0:
-				raise ParseException(lineno,
+				raise ParseException(pipeline_file,lineno,
 					'export block does not accept an argument string')
 
 			new_lineno,content = read_block_content(lines,lineno+1)
@@ -699,20 +709,22 @@ def parse_task(task_name,dep_str,lines,lineno):
 				ma = var_assignment_pattern.match(line)
 				md = delete_var_pattern.match(line)
 				if ma:
-					statements.append(VariableAssignment(ma.group(1),ma.group(2),export_lineno+i+1))
+					statements.append(VariableAssignment(ma.group(1),ma.group(2),
+														pipeline_file,export_lineno+i+1))
 				elif md:
-					statements.append(DeleteVariable(ma.group(1),export_lineno+i+1))
+					statements.append(DeleteVariable(ma.group(1),pipeline_file,export_lineno+i+1))
 				elif len(line) == 0:
 					pass
 				else:
-					raise ParseException(export_lineno+1+i,'expected a variable assignment, got: %s' % line)
+					raise ParseException(pipeline_file,export_lineno+1+i,
+							'expected a variable assignment, got: %s' % line)
 
-			blocks.append(ExportBlock(statements,export_lineno))
+			blocks.append(ExportBlock(statements,pipeline_file,export_lineno))
 			lineno = new_lineno
 		else:
 			in_task = False	
 
-	return lineno,Task(task_name,dependencies,blocks,start_lineno)
+	return lineno,Task(task_name,dependencies,blocks,pipeline_file,start_lineno)
 
 def read_block_content(lines,lineno):
 	"""
@@ -736,11 +748,14 @@ def read_block_content(lines,lineno):
 variable_pattern = re.compile('([\w\d_]+|\{[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']
 
-def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
+def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 	"""
 	This function will both parse variables in the 
 	string (assumed to be one line of text) and replace them
 	with their appropriate values given this context.
+
+	ParseException is raised if syntax is bad.
+	UnknownVariableException is raised if variables or functions can't be resolved.
 	"""
 	
 	cpos = 0
@@ -750,7 +765,7 @@ def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
 		# handle escaping special character
 		if x[cpos] == '\\':
 			if cpos == len(x)-1:
-				raise ParseException(lineno,'incomplete escape sequence')
+				raise ParseException(source_file,lineno,'incomplete escape sequence')
 
 			c = x[cpos+1]
 			replacement = c
@@ -762,7 +777,7 @@ def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
 		elif x[cpos] == '$':
 			# variable started!
 			if cpos == len(x)-1:
-				raise ParseException(lineno,'incomplete variable reference')
+				raise ParseException(source_file,lineno,'incomplete variable reference')
 
 			# get the variable name
 			m = variable_pattern.match(x[(cpos+1):])
@@ -771,7 +786,7 @@ def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
 				if cpos < len(x)-1 and x[cpos+1] == '(':
 					varname = ''
 				else:
-					raise ParseException(lineno,'invalid variable reference')
+					raise ParseException(source_file,lineno,'invalid variable reference')
 			else:
 				varname = m.group(1)
 	
@@ -788,10 +803,10 @@ def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
 				fxn_argstart_pos = fxn_paren_pos + 1
 				# we only support two functions
 				if varname not in SUPPORTED_BUILTIN_FUNCTIONS:
-					raise ParseException(lineno,'invalid builtin function name: %s' % varname)
+					raise UnknownVariableException(source_file,lineno,'invalid builtin function name: %s' % varname)
 
 				# process the rest of the string
-				expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,cwd,pipelines,lineno,nested=True)
+				expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,cwd,pipelines,source_file,lineno,nested=True)
 
 				x = x[:fxn_argstart_pos] + expanded_x_part
 				eofxn = fxn_argstart_pos + eofxn
@@ -844,7 +859,7 @@ def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
 				replacement = ''
 
 				if varname not in context:
-					raise VariableValueException(lineno,'variable %s does not exist' % varname)
+					raise UnknownVariableException(source_file,lineno,'variable %s does not exist' % varname)
 	
 				replacement = context[varname]	
 	
@@ -864,6 +879,6 @@ def expand_variables(x,context,cwd,pipelines,lineno,nested=False):
 	# under normal circumstances, reaching the end of the string is what we want.
 	# but if we are nested, then we should find a parenthesis first.
 	if nested:
-		raise ParseException(lineno,'expected to find a ")", none found')
+		raise ParseException(source_file,lineno,'expected to find a ")", none found')
 
 	return x

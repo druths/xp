@@ -297,7 +297,20 @@ class LineNoTestCase(unittest.TestCase):
 		try:
 			p.run()
 		except ParseException as e:
+			self.assertTrue(e.source_file.endswith('lineno1'))
 			self.assertEquals(e.lineno,4)
 
 		return
 
+	def test_use_varexpands1(self):
+		p = get_pipeline(get_complete_filename('lineno2'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		try:
+			p.run()
+		except ParseException as e:
+			self.assertTrue(e.source_file.endswith('lineno1'))
+			self.assertEquals(e.lineno,4)
+
+		return
