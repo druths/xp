@@ -747,6 +747,7 @@ def read_block_content(lines,lineno):
 
 variable_pattern = re.compile('([\w\d_]+|\{[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']
+SUPPORTED_ESCAPABLE_CHARACTERS = ['$','\\']
 
 def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 	"""
@@ -768,6 +769,9 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 				raise ParseException(source_file,lineno,'incomplete escape sequence')
 
 			c = x[cpos+1]
+			
+			if c not in SUPPORTED_ESCAPABLE_CHARACTERS:
+				raise ParseException(source_file,lineno,'invalid escape sequence \\%s' % c)
 			replacement = c
 			pre_escape = x[:cpos]
 			post_escape = x[(cpos+2):]
