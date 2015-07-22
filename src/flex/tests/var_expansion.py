@@ -84,6 +84,18 @@ class InnerVarExpansionTestCase(unittest.TestCase):
 		exval = expand_variables('hello_$var1.txt',context,cwd,None,None,-1)
 		self.assertEquals(exval,'hello_hello.txt')
 
+	def test_invalid_escape1(self):
+		context = {'var1':'hello'}
+		cwd = '.'
+
+		try:
+			exval = expand_variables(r'\n',context,cwd,None,None,-1)
+			self.fail('\\n should raise a ParseException')
+		except ParseException as e:
+			pass
+		except:
+			self.fail('\\n should raise a ParseException')
+
 	def test_grep_error(self):
 		cmd = """grep -o '/article/[^"]+' $PLN(lists_html/\$TAG.*) > $PLN(article_lists/\$TAG.txt)"""
 		cwd = '.'
