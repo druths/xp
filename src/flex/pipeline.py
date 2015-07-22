@@ -766,7 +766,7 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 		# handle escaping special character
 		if x[cpos] == '\\':
 			if cpos == len(x)-1:
-				raise ParseException(source_file,lineno,'incomplete escape sequence')
+				raise ParseException(source_file,lineno,'incomplete escape sequence at EOL')
 
 			c = x[cpos+1]
 			
