@@ -323,60 +323,132 @@ variables, `in_dir`, `tmp_file`, and `out_fname`.  Notice that it also
 references the shell variable `PATH` and that, in order to make this reference,
 a backslash is used to escape the `$` character.
 
+**Configuring the execution environment.** All flex variables are exported into the shell environment in which the execution system will run.  For example::
+
+	PYTHONPATH=.	
+
+	do_it:
+		code.py:
+			import mylib
+			mylib.run()
+
+sets the *PYTHONPATH* variable that the python interpreter will use.
+
 #################
 Overloading tasks
 #################
 
+Situations can arise in which a pipeline is extending another pipeline, but
+wants a particular task to do something different.  This task *overloading* is
+achieved simply by defining the task again in the current pipeline::
 
+	extend first_pipeline
+
+	first:
+		code.py:
+			print 'this is the first task'
+
+In this case, we have overloaded *first* task from earlier to print out a
+different message.
 
 .. _variables_and_functions:
 
-***********************
-Variables and functions
-***********************
+********************************
+Variable and function references
+********************************
 
 As alluded to in earlier sections, variables and functions are important to
 writing modular, readable, and maintainable pipelines.  Here we discuss the
 guts of how variables, variable references, and function invocations are
 handled and resolved.
 
-##############
+######
 Syntax
-##############
+######
+
+Much like in bash and make, variables and functions are references using
+``$<name>`` or ``${<name>}``, where the name is the name of the variable or
+function.  Functions have the additional requirement of parentheses which
+contain the input arguments: ``$<fxn_name>(<args>)`` or ``${<fxn_name>}(<args>)``.
+
+Variable and function names can consist of one or more alphanumeric or
+underscore characters. The second reference form using curly braces allows the use of variables in places where there is no whitespace: ``foobar_${iternum}.txt``.
 
 ###################
 Available functions
 ###################
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Referencing another pipelines resources
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+Executing shell commands
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-At times it may be necessary for one pipeline to access a resource in another
-pipeline's namespace.  The `$PLN(p,r)` function can be used for this purpose.
-Here the function accepts two arguments. `p` is the name of the pipeline (which
-must be mentioned in a `use` statement) and `r` is the resource name.  For
-example, in the following code
+The ``$(x)`` command executes command ``x`` and evaluates to the standard out
+produced by the execution.  To be valid, the command must produce exactly one
+line of text.
 
-```
+::
+
+	cmd = gcc
+	t1:
+		code.sh:
+			ls -lh $(which $cmd)
+
+In this example, the which command is run.  Notice that flex variables can be
+used within functions.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Accessing resources in the namespace
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``$PLN(x)`` function will resolve to the absolute path to the resource
+``x`` within the pipeline namespace.  So, if the pipeline namespace is
+``/tmp/foobar``, then ``$PLN(x) = /tmp/foobar_x``.
+
+**Accessing resources in `other` namespaces.** At times it may be necessary for
+one pipeline to access a resource in another pipeline's namespace.  The
+``$PLN(p,r)`` function can be used for this purpose.  Here the function accepts
+two arguments. ``p`` is the name of the pipeline (which must be mentioned in a
+``use`` statement) and ``r`` is the resource name.  For example, in the
+following code::
+
 	use phase1 as p1
 
 	p2_task: p1.t1
 		code.sh:
 			head $PLN(p1,foobar.txt)
-```
 
-`p2_task` will access the file `foobar.txt` in the namespace of the phase1
+``p2_task`` will access the file ``foobar.txt`` in the namespace of the phase1
 pipeline.
-
-
 
 ################
 Resolution rules
 ################
 
+Variable and function references are resolved in two places:
+
+  * The right-hand side of variable assignments
+  * Anywhere inside blocks
+
+Consider the following example pipeline::
+
+	my_site_packages=$(which python | basedir)/lib/site-packages
+
+	iter_num=10
+
+	download:
+		export:
+			PYTHONPATH=$my_site_packages
+		code.py:
+			import mylib
+			mylib.run($iter_num)
+
+In it, a number of flex variables and functions are used.  Notably, the
+reference to ``$iter_num`` is resolved to ``10`` before the python code is
+called.
+
 ######################
 Global vs. block scope
 ######################
 
-
+Any variables defined in or changed in *export* blocks do not retain those
+affects outside of the task in which they appear.
