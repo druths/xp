@@ -3,6 +3,19 @@ from flex.pipeline import get_pipeline, USE_FILE_PREFIX
 import flex.pipeline as pipeline
 import os, os.path
 
+# check for gnuplot
+gnuplot_installed = os.system('gnuplot -V') == 0
+
+__all__ = ['BlockArgStringTestCase','AwkTestCase']
+
+if gnuplot_installed:
+	__all__.append('GnuplotTestCase')
+else:
+	print 'gnuplot not found: skipping tests'
+
+################
+# define all the test cases
+
 BASE_PATH = os.path.dirname(__file__)
 
 def get_complete_filename(fname):
