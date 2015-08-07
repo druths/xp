@@ -1,0 +1,11 @@
+language: python
+python:
+  - "2.7"
+script: 
+  - python -m flex.test
+notifications:
+  email:
+    recipients:
+      - druths@networkdynamics.org
+  on_success: never
+  on_failure: always
