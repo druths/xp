@@ -1,5 +1,5 @@
 
-# Introduction #
+# flex [![Build Status](https://travis-ci.org/druths/flex.svg?branch=master)](https://travis-ci.org/druths/flex) #
 
 Flex is a command-line tool for building data-science pipelines, particularly
 in the research context. It draws its inspiration from make and linguini.
