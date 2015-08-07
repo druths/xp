@@ -49,14 +49,14 @@ the pipeline maintains a namespace on the filesystem which a pipeline can
 easily add files to.  The namespace can be one of two things:
 
   * a prefix that is added to any given filename.  By default the prefix would
-	be the name of the pipeline.  So if the pipeline `clean_census_info` had a
-	task which added the file `census.tsv` to the pipeline namespace, the file
-	would actually be named `clean_census_info_census.tsv` on disk.
+	be the name of the pipeline.  So if the pipeline ``clean_census_info`` had a
+	task which added the file ``census.tsv`` to the pipeline namespace, the file
+	would actually be named ``clean_census_info_census.tsv`` on disk.
 	
   * a directory into which all files in the namespace are added. By default the
-	directory name is `<pipeline_name>_data`. So, given the situation above
-	with `clean_census_info`, `census.tsv` would be written to
-	`clean_census_info_data/census.tsv`.
+	directory name is ``<pipeline_name>_data``. So, given the situation above
+	with ``clean_census_info``, ``census.tsv`` would be written to
+	``clean_census_info_data/census.tsv``.
 
 The namespacing behavior can be configured in the global section, see
 :ref:`config_data_prefixing`.
@@ -93,7 +93,7 @@ Comments
 
 Thoroughly commenting pipelines is an important part of making them readable
 and maintainable. Within a flex pipeline, a comment is always one line long:
-beginning with a `#` symbol and continuing to the end of the line.
+beginning with a ``#`` symbol and continuing to the end of the line.
 
 ******************
 The global section
@@ -112,7 +112,7 @@ In keeping with UNIX shell syntax, variables are set using the syntax::
 
 	set <var_name>=<var_value>
 
-Throughout a pipeline, the `$` character denotes a variable or function
+Throughout a pipeline, the ``$`` character denotes a variable or function
 reference.
 
 .. _config_data_prefixing:
@@ -123,36 +123,36 @@ Configuring data prefixing
 
 The flex system provides an easy way to create and access files and directories
 within the pipelines namespace.  The namespace can be either a file prefix name
-or a directory (see :ref:`data_namespacing` for details).  The `prefix` command
+or a directory (see :ref:`data_namespacing` for details).  The ``prefix`` command
 is used to configure this option for a given pipeline.
 
 The general syntax for this command is::
 
 	prefix file/dir [prefix_path]
 
-if `prefix_path` is omitted, then the following defaults are used:
+if ``prefix_path`` is omitted, then the following defaults are used:
 
-  * `<pipeline name>` for file prefixes
-  * `<pipeline name>_data` for dir prefixes
+  * ``<pipeline name>`` for file prefixes
+  * ``<pipeline name>_data`` for dir prefixes
 
 Here are some examples:
 
-  * to set the prefix to be the default file prefix, use `prefix file`
+  * to set the prefix to be the default file prefix, use ``prefix file``
 
-  * to set the prefix to the file prefix *foobar*, use `prefix file foobar`
+  * to set the prefix to the file prefix *foobar*, use ``prefix file foobar``
 
-  * to set the prefix to the default directory prefix, use `prefix dir`
+  * to set the prefix to the default directory prefix, use ``prefix dir``
 
   * to set the prefix to the **data** directory above the pipeline's 
-	containing directory, use `prefix dir ../data`
+	containing directory, use ``prefix dir ../data``
 
 ##########################
 Connecting other pipelines
 ##########################
 
 The tasks in a single pipeline may comprise only one portion of an entire
-workflow.  Supposing that we have a pipeline `phase1` with task `t1`, we can
-connect it into another pipeline using the `use` keyword in the global section.
+workflow.  Supposing that we have a pipeline ``phase1`` with task ``t1``, we can
+connect it into another pipeline using the ``use`` keyword in the global section.
 
 ::
 
@@ -161,7 +161,7 @@ connect it into another pipeline using the `use` keyword in the global section.
 	p2_task: phase1.t1
 		# task stuff goes here
 
-The `use` keyword also allows easier or more readable aliases to be defined::
+The ``use`` keyword also allows easier or more readable aliases to be defined::
 
 	use phase1 as p1
 
@@ -174,14 +174,14 @@ Inheriting another pipeline
 
 In some cases, a pipeline will be a specialization of another pipeline - it will need to use the same tasks, but perhaps define constants or parameters differently.  This can often arise in machine learning contexts - different pipelines might invoke the same classifier, only with different parameters.
 
-One way to achieve this without duplicating large sections of code is to write the shared code (tasks and variables) into one pipeline and have all the related pipelines inherit that pipeline using the `extend` keyword.
+One way to achieve this without duplicating large sections of code is to write the shared code (tasks and variables) into one pipeline and have all the related pipelines inherit that pipeline using the ``extend`` keyword.
 
-For example, suppose that we have a pipeline named `ml_master` which declares two
-tasks `train` and `classify` that use the value of the variable `GRID_SIZE` to
+For example, suppose that we have a pipeline named ``ml_master`` which declares two
+tasks ``train`` and ``classify`` that use the value of the variable ``GRID_SIZE`` to
 build and run the classifier.
 
-We could build a pipeline `ml_0.5` that inherits the behavior of `ml_master`,
-but with a specific choice of `GRID_SIZE`::
+We could build a pipeline ``ml_0.5`` that inherits the behavior of ``ml_master``,
+but with a specific choice of ``GRID_SIZE``::
 
 	extend ml_master
 
@@ -214,7 +214,7 @@ A task has the following structure::
 		...
 		<blockN>
 
-As a simple example, here is a task named `hworld` that simply prints "Hello"
+As a simple example, here is a task named ``hworld`` that simply prints "Hello"
 followed by "world" on two separate lines::
 
 	hworld: other_task
@@ -225,7 +225,7 @@ followed by "world" on two separate lines::
 			msg = 'world'
 			print msg
 
-The task depends on another task named `other_task`.  In order to print the
+The task depends on another task named ``other_task``.  In order to print the
 results, it uses two code blocks - one containing a shell script and one
 containing a python script.  The details of the syntax here will be discussed
 in the following section.
@@ -248,9 +248,9 @@ A dependency is another task.  To declare a dependency, simply put the task name
 		code.sh:
 			echo 'second'
 
-In the example above, the task `second` has one dependency: `first`.
+In the example above, the task ``second`` has one dependency: ``first``.
 
-In situations where a pipeline has been included with the `use` keyword, tasks in the included pipeline can be dependencies.  To do this, use `<pipeline_name>.<task_name>` to refer to the task.  If an alias was given for the pipeline, then the alias must be used::
+In situations where a pipeline has been included with the ``use`` keyword, tasks in the included pipeline can be dependencies.  To do this, use ``<pipeline_name>.<task_name>`` to refer to the task.  If an alias was given for the pipeline, then the alias must be used::
 
 	use first_pipeline as fp
 
@@ -268,15 +268,15 @@ A block corresponds to a unit of executable code *in a specific language*. A sin
 A block consists of the block declaration line (indented one tab) followed by the block contents (all of which is intended two levels).
 
 **Block declaration.** The block declaration line indicates what language is
-being used. `code.sh` corresponds to the shell language, `code.py` corresponds
+being used. ``code.sh`` corresponds to the shell language, ``code.py`` corresponds
 to python.  Currently the following languages are supported:
 
-  * Bash - `code.sh`
-  * Python - `code.py`
-  * Gnuplot - `code.gpl`
-  * Awk - `code.awk`
+  * Bash - ``code.sh``
+  * Python - ``code.py``
+  * Gnuplot - ``code.gpl``
+  * Awk - ``code.awk``
 
-There is also another special block called `export` which accepts variable
+There is also another special block called ``export`` which accepts variable
 declarations using the same format as the globals section.  *export* blocks can
 be used to set variables within the scope of this specific task.
 
@@ -304,7 +304,7 @@ several points are worth noting.
 
 Before the block content is passed to the appropriate execution system (e.g.,
 the python interpreter), flex variables and functions are first evaluated.  All
-variables and functions begin with a `$` character::
+variables and functions begin with a ``$`` character::
 
 	# var_test pipeline
 	in_dir=/etc
@@ -319,9 +319,9 @@ variables and functions begin with a `$` character::
 			cut -f1 > $out_fname
 
 In the example above, the shell code block makes use of three flex-defined
-variables, `in_dir`, `tmp_file`, and `out_fname`.  Notice that it also
-references the shell variable `PATH` and that, in order to make this reference,
-a backslash is used to escape the `$` character.
+variables, ``in_dir``, ``tmp_file``, and ``out_fname``.  Notice that it also
+references the shell variable ``PATH`` and that, in order to make this reference,
+a backslash is used to escape the ``$`` character.
 
 **Configuring the execution environment.** All flex variables are exported into the shell environment in which the execution system will run.  For example::
 
@@ -369,10 +369,13 @@ Syntax
 Much like in bash and make, variables and functions are references using
 ``$<name>`` or ``${<name>}``, where the name is the name of the variable or
 function.  Functions have the additional requirement of parentheses which
-contain the input arguments: ``$<fxn_name>(<args>)`` or ``${<fxn_name>}(<args>)``.
+contain the input arguments: ``$<fxn_name>(<args>)`` or
+``${<fxn_name>}(<args>)``.
 
 Variable and function names can consist of one or more alphanumeric or
-underscore characters. The second reference form using curly braces allows the use of variables in places where there is no whitespace: ``foobar_${iternum}.txt``.
+underscore characters. The second reference form using curly braces allows the
+use of variables in places where there is no whitespace:
+``foobar_${iternum}.txt``.
 
 ###################
 Available functions
