@@ -28,9 +28,9 @@ depending on permission settings for your python site-packages.
 
 # Writing a pipeline #
 
-A *pipeline* is a sequence of steps, called *tasks*, that manipulates data.  On
-a very practical level, each task taking some files as input and producing
-other files as output. In the example below, there are four tasks, each
+A *pipeline* is a sequence of steps (called *tasks*) that manipulates data.  On
+a very practical level, each task takes some data as input and produces
+other data as output. In the example below, there are four tasks, each
 involved in a different part of the workflow.
 
 ```
@@ -74,7 +74,8 @@ needing to be run again.  In order to re-run a task, one can simply unmark it
 and run it again.
 
 If you choose to run a task which has unmarked dependencies, these will be run
-before the task itself is run.
+before the task itself is run - in this way, an entire workflow can be run
+using a single command.
 
 A task contains *blocks* which describe the actual computational steps being
 taken. As is seen in the example above, blocks can contain code for various
