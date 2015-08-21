@@ -19,14 +19,7 @@ hard to reconstruct.
 Flex makes it easy to create and update workflows (called pipelines) while
 always retaining a connection to the data that the pipeline produced.
 
-----------------
-Getting started
-----------------
-
-**Jump in.** To quickly get up and running, check out the :ref:`quick_start`.
-
-**Tutorial.** To get a sense for how all the features of flex fit together,
-take a look at the :ref:`tutorial`.
+**Jump in.** To quickly get up and running, check out :ref:`quick_start`.
 
 -------------------
 Reference materials
