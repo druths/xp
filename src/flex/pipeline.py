@@ -458,10 +458,10 @@ class Task:
 
 		assert force in FORCE_CHOICES 
 
-		logger.debug('task %s: marked = %d' % (self.name,self.is_marked()))
-		if force == FORCE_NONE and self.is_marked():
-			logger.info('task %s is marked, skipping' % self.name)
-			return
+#		logger.debug('task %s: marked = %d' % (self.name,self.is_marked()))
+#		if force == FORCE_NONE and self.is_marked():
+#			logger.info('task %s is marked, skipping' % self.name)
+#			return
 
 		# first run all dependencies
 		dep_force = FORCE_ALL if force == FORCE_ALL else FORCE_NONE
@@ -469,6 +469,27 @@ class Task:
 		for d in self._dependencies:
 			d.run(force=dep_force)
 		
+		# check if we need to run this task
+		run_task = False
+		if force != FORCE_NONE:
+			logger.debug('run task %s: forced' % self.name)
+			run_task = True
+		elif not self.is_marked():
+			logger.debug('run task %s: unmarked' % self.name)
+			run_task = True
+		else:
+			mst = self.mark_timestamp()
+			for d in self._dependencies:
+				if mst < d.mark_timestamp():
+					run_task = True
+					break
+
+			if run_task:
+				logger.debug('run task %s: dep timestamp' % self.name)
+
+		if not run_task:
+			return
+
 		# get ready to run this task
 		context = self.pipeline.get_context()
 		pipelines = self.pipeline.get_used_pipelines()
