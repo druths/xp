@@ -106,7 +106,7 @@ Once a pipeline has been written, it can be run using the flex command-line tool
   fx run pipeline_file
 
 The command-line tool also allows easy marking (`mark`), unmarking (`unmark`),
-and querying statistics (`info`) for a pipeline.
+and querying task info (`tasks`) for a pipeline.
 
 ## Pipeline-specific Data ##
 
@@ -245,25 +245,13 @@ pipelines that demonstrate the core features of the tool.
 
 The `fx` command provides several core capabilities:
 
-  - `fx info <pipeline>` will print info about the pipeline (NOT IMPLEMENTED)
-
   - `fx tasks <pipeline>` will out info about one or more tasks in the pipeline including whether they are marked
 
   - `fx run <pipeline>` will run a pipeline (or a task within a pipeline)
 
-  - `fx desc <pipeline>` will describe how a pipeline (or a task within a
-    pipeline) will be run. This is a good way to make sure that running your
-    pipeline will do what you expect. (NOT IMPLEMENTED)
-
   - `fx mark <pipeline>` will mark specific tasks or an entire pipeline
 
   - `fx unmark <pipeline>` will unmark specific tasks or an entire pipeline
-
-  - `fx wipe <pipeline>` will remove all files in the namespace of the pipeline ... be very careful using this command!
-
-  - `fx import <pipeline> <files>` will bring files into the pipeline namespace (NOT IMPLEMENTED)
-
-  - `fx export <pipeline> <files>` will move files out of the pipeline namespace (NOT IMPLEMENTED)
 
 All of these commands have help messages to help their correct use.
 
