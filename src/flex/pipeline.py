@@ -551,7 +551,7 @@ class UnknownVariableException(Exception):
 	def __init__(self,source_file,lineno,message):
 		Exception.__init__(self,message)
 		self.source_file = source_file
-		self.lineno = lineno
+		self.lineno = lineno+1 # all internal line numbers are index 0
 
 VAR_PATTERN = '\w[\w\d_]*'
 FILE_PATTERN = '.+?'
@@ -690,7 +690,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 			arg_str = mc.group(2)
 			logger.debug('found code block at line %d' % lineno)
 			block_lineno = lineno
-			lineno,content = read_block_content(lines,lineno+1)
+			lineno,content,content_linenos = read_block_content(lines,lineno+1)
 
 			blocks.append(CodeBlock(lang,arg_str,content,pipeline_file,block_lineno))
 		elif me:
@@ -702,23 +702,23 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 				raise ParseException(pipeline_file,lineno,
 					'export block does not accept an argument string')
 
-			new_lineno,content = read_block_content(lines,lineno+1)
+			new_lineno,content,content_linenos = read_block_content(lines,lineno+1)
 			
 			# parse the content as variable assignments
 			statements = []
-			for i,line in enumerate(content):
+			for ln,line in zip(content_linenos,content):
 				line = line.rstrip()
 				ma = var_assignment_pattern.match(line)
 				md = delete_var_pattern.match(line)
 				if ma:
 					statements.append(VariableAssignment(ma.group(1),ma.group(2),
-														pipeline_file,export_lineno+i+1))
+														pipeline_file,ln))
 				elif md:
-					statements.append(DeleteVariable(ma.group(1),pipeline_file,export_lineno+i+1))
+					statements.append(DeleteVariable(ma.group(1),pipeline_file,ln))
 				elif len(line) == 0:
 					pass
 				else:
-					raise ParseException(pipeline_file,export_lineno+1+i,
+					raise ParseException(pipeline_file,ln,
 							'expected a variable assignment, got: %s' % line)
 
 			blocks.append(ExportBlock(statements,pipeline_file,export_lineno))
@@ -732,20 +732,22 @@ def read_block_content(lines,lineno):
 	"""
 	Extract block content - begins with two tabs.
 
-	Return: (next_lineno,content)
+	Return: (next_lineno,content,content_linenos)
 	"""
 	last_lineno = lineno
 	content_lines = []
+	content_linenos = []
 	while last_lineno < len(lines):
 		if lines[last_lineno].startswith('\t\t'):
 			content_lines.append(lines[last_lineno])
+			content_linenos.append(last_lineno)
 		elif len(lines[last_lineno].strip()) == 0 or lines[last_lineno].strip().startswith('#'):
 			pass
 		else:
 			break
 		last_lineno += 1
 	
-	return last_lineno,map(lambda x: x[2:].rstrip(),lines[lineno:last_lineno])
+	return last_lineno,map(lambda x: x[2:].rstrip(),content_lines),content_linenos
 
 variable_pattern = re.compile('([\w\d_]+|\{[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']

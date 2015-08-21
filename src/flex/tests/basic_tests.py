@@ -103,6 +103,18 @@ class BasicTestCase(unittest.TestCase):
 
 		p.unmark_all_tasks(recur=True)
 
+	def test_block_comment_line_shift(self):
+		p = get_pipeline(get_complete_filename('comm2'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		try:
+			p.run()
+			self.fail('this pipeline should have a faulty block')
+		except UnknownVariableException, e:
+			self.assertEquals(e.lineno,6)
+
+		p.unmark_all_tasks(recur=True)
+
 	def test_run_extend1(self):
 		p = get_pipeline(get_complete_filename('extend1'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
