@@ -683,7 +683,9 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 		mc = code_pattern.match(cur_line)
 		me = export_pattern.match(cur_line)
 
-		if mc:
+		if cur_line.strip().startswith('#'):
+			lineno += 1
+		elif mc:
 			lang = mc.group(1)
 			arg_str = mc.group(2)
 			logger.debug('found code block at line %d' % lineno)

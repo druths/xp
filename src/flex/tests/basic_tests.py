@@ -87,16 +87,19 @@ class BasicTestCase(unittest.TestCase):
 
 		p.unmark_all_tasks(recur=True)
 
+	def test_task_comment(self):
+		p = get_pipeline(get_complete_filename('task_comm1'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		p.run()
+
+		p.unmark_all_tasks(recur=True)
+	
 	def test_block_comment(self):
 		p = get_pipeline(get_complete_filename('comm1'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 
 		p.run()
-
-		# check the marking
-		#self.assertTrue(os.path.exists(get_complete_filename('.extend1-task1.mark')))
-		#self.assertTrue(os.path.exists(get_complete_filename('.extend1-task2.mark')))
-		#self.assertTrue(os.path.exists(get_complete_filename('.extend1-extra1.mark')))
 
 		p.unmark_all_tasks(recur=True)
 
