@@ -1,4 +1,5 @@
 import os, os.path
+import sys
 import argparse
 import logging
 import time
@@ -81,7 +82,7 @@ def do_unmark(args):
 
 			if task is None:
 				logger.error('task %s dos not exist' % tname)
-				break
+				sys.exit(-1)
 
 			task.unmark()
 		
@@ -115,7 +116,7 @@ def do_mark(args):
 
 			if task is None:
 				logger.error('task %s does not exist' % tname)
-				break
+				sys.exit(-1)
 
 			task.mark()
 
@@ -127,6 +128,7 @@ def do_run(args):
 	parser = argparse.ArgumentParser('fx run',description='run a flex pipeline')
 	parser.add_argument('-f','--force',choices=['NONE','TOP','ALL'],default='NONE',
 		help='force tasks to run, even if they is already marked. NONE will not force any marked tasks to run; TOP will force the named task or the top-level tasks in the pipeline to run; ALL will force all marked tasks encountered in the dependency tree to run.')
+	parser.add_argument('-D','--no_dependencies',action='store_true',help='do not evaluate or run any dependencies - only this task will run regardless of the state of its dependencies. This option is only valid if tasks have been specified.')
 	parser.add_argument('pipeline_file',help='the pipeline to run')
 	parser.add_argument('task_name',nargs='?',help='the specific task to run. If omitted, the entire pipeline will be run')
 
@@ -135,6 +137,10 @@ def do_run(args):
 
 	force_val_lookup = {'NONE':FORCE_NONE, 'TOP':FORCE_TOP, 'ALL':FORCE_ALL}
 	force_val = force_val_lookup[args.force]
+
+	if not args.task_name and args.no_dependencies:
+		logger.error('the no_dependencies (-D) flag can only be used when tasks have been explicitly specified')
+		sys.exit(-1)
 
 	# load the pipeline
 	p = get_pipeline(args.pipeline_file)
@@ -147,6 +153,7 @@ def do_run(args):
 
 		if t is None:
 			logger.error('task %s does not exist' % tname)
+			sys.exit(-1)
 		else:
 			t.run(force=force_val)
 
@@ -167,10 +174,21 @@ def main():
 	try:
 		eval('do_%s(args.cmd_args)' % args.command)
 	except ParseException as e:
-		logging.exception('parsing error on line %d: %s' % (e.lineno,e.message))
-	except Exception as e:
-		logging.exception('command %s failed' % args.command)
+		if log_level in [logging.DEBUG,logging.INFO]:
+			logging.exception('parsing error on line %d: %s' % (e.lineno,e.message))
+		else:
+			logging.error('parsing error on line %d: %s' % (e.lineno,e.message))
 
+		sys.exit(-1)
+	except Exception as e:
+		if log_level in [logging.DEBUG,logging.INFO]:
+			logging.exception('command %s failed' % args.command)
+		else:
+			logging.error('command %s failed: %s' % (args.command,e.message))
+
+		sys.exit(-1)
+
+	sys.exit(0)
 	return
 
 if __name__ == '__main__':
