@@ -191,6 +191,42 @@ class BasicTestCase(unittest.TestCase):
 
 class ForceTestCase(unittest.TestCase):
 
+	def test_force_solo(self):
+		p = get_pipeline(get_complete_filename('force_test'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t1_file = get_complete_filename('force_test_t1.txt')
+		t1 = p.get_task('task1')
+		t2_file = get_complete_filename('force_test_t2.txt')
+		t2 = p.get_task('task2')
+		t3_file = get_complete_filename('force_test_t3.txt')
+		t3 = p.get_task('task3')
+			
+		# clear out the products of this pipeline
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		# run task 3
+		t3.run(force=FORCE_SOLO)
+
+		# check the output
+		self.assertFalse(os.path.exists(t1_file))
+		self.assertFalse(os.path.exists(t2_file))
+		self.assertTrue(os.path.exists(t3_file))
+
+		if os.path.exists(t1_file):
+			os.remove(t1_file)
+		if os.path.exists(t2_file):
+			os.remove(t2_file)
+		if os.path.exists(t3_file):
+			os.remove(t3_file)
+
+		p.unmark_all_tasks(recur=True)
+
 	def test_passthrough(self):
 		p = get_pipeline(get_complete_filename('force_test'),
 						 default_prefix=USE_FILE_PREFIX)

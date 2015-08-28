@@ -29,7 +29,8 @@ LANG_FXN_LOOKUP = {	'sh':'run_shell',
 FORCE_NONE = 'dont_force'
 FORCE_TOP = 'force_top'
 FORCE_ALL = 'force_all'
-FORCE_CHOICES = [FORCE_NONE,FORCE_TOP,FORCE_ALL]
+FORCE_SOLO = 'force_solo' # just run this task - don't run any others
+FORCE_CHOICES = [FORCE_NONE,FORCE_TOP,FORCE_ALL,FORCE_SOLO]
 
 #################
 # the factory function 
@@ -298,7 +299,7 @@ class Pipeline:
 		# run the leaf tasks - this will trigger other tasks as needed
 		for t in get_leaves(self.tasks):
 			logger.debug('running task %s' % t.name)
-			t.run()
+			t.run(force)
 	
 class VariableAssignment:
 	def __init__(self,varname,value,source_file,lineno):
@@ -464,10 +465,13 @@ class Task:
 #			return
 
 		# first run all dependencies
-		dep_force = FORCE_ALL if force == FORCE_ALL else FORCE_NONE
-		logger.debug('task %s: run dependencies' % self.name)
-		for d in self._dependencies:
-			d.run(force=dep_force)
+		if force != FORCE_SOLO:
+			dep_force = FORCE_ALL if force == FORCE_ALL else FORCE_NONE
+			logger.debug('task %s: run dependencies' % self.name)
+			for d in self._dependencies:
+				d.run(force=dep_force)
+		else:
+			logger.debug('task %s: skipping dependencies, solo mode!' % self.name)
 		
 		# check if we need to run this task
 		run_task = False
@@ -484,11 +488,10 @@ class Task:
 					run_task = True
 					break
 
-			if run_task:
-				logger.debug('run task %s: dep timestamp' % self.name)
-
 		if not run_task:
 			return
+
+		logger.debug('run task %s: dep timestamp' % self.name)
 
 		# get ready to run this task
 		context = self.pipeline.get_context()
