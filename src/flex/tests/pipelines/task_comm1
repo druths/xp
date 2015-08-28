@@ -1,0 +1,5 @@
+
+task1:
+# this is a block comment
+	export:
+		X=1

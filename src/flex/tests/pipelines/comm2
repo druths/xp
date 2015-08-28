@@ -1,0 +1,6 @@
+
+task1:
+	export:
+		X=2
+#		blargh
+		X=$Y

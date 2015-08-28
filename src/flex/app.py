@@ -9,7 +9,7 @@ from flex.pipeline import *
 logger = logging.getLogger(os.path.basename(__file__))
 
 LOG_LEVELS = ['DEBUG','WARN','ERROR','CRITICAL']
-COMMANDS = ['tasks','info','unmark','mark','run','wipe','import','export','dry_run']
+COMMANDS = ['tasks','unmark','mark','run','wipe','dry_run']
 
 def do_info(args):
 	raise NotImplementedError
@@ -29,7 +29,7 @@ def do_export(args):
 
 def do_tasks(args):
 	parser = argparse.ArgumentParser('fx tasks',description='print information on tasks in a particular pipeline')
-	parser.add_argument('pipeline_file',help='the pipeline to view tasks in')
+	parser.add_argument('pipeline_file',help='the pipeline of interest')
 
 	args = parser.parse_args(args)
 

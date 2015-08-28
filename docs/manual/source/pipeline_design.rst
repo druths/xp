@@ -28,9 +28,8 @@ In much the same way as a make file, a flex pipeline consists of two parts:
 	configurations and connections.  For more details on this, see
 	:ref:`global_section`.
 
-From a more functional perspective, most pipelines will have two properties
-that need to be addressed with additional high-level designs and pipeline
-conventions:
+In order to motivate the design of a pipeline, here we'll discuss two important
+attributes that many (most?) pipelines will have:
 
   * they produce data
 
@@ -106,7 +105,9 @@ that will affect and be available to all tasks in the pipeline.
 Declaring variables
 ####################
 
-Note that here we offer a detailed discussion of variables within the context of the global section. For more information on variables and functions in general, see :ref:`variables_and_functions`.
+Note that here we offer a detailed discussion of variables within the context
+of the global section. For more information on variables and functions in
+general, see :ref:`variables_and_functions`.
 
 In keeping with UNIX shell syntax, variables are set using the syntax::
 

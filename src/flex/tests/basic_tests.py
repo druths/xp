@@ -2,6 +2,7 @@ import unittest
 from flex.pipeline import *
 import flex.pipeline as pipeline
 import os, os.path
+import time
 
 BASE_PATH = os.path.dirname(__file__)
 
@@ -87,6 +88,68 @@ class BasicTestCase(unittest.TestCase):
 
 		p.unmark_all_tasks(recur=True)
 
+	def test_mark_timestamp(self):
+		"""
+		Test whether, when a dependency's timestamp is newer than the dependent's, the depent is run.
+		"""
+
+		p = get_pipeline(get_complete_filename('tasks2'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()
+
+		# check the marking
+		self.assertTrue(os.path.exists(get_complete_filename('.tasks2-task1.mark')))
+		self.assertTrue(os.path.exists(get_complete_filename('.tasks2-task2.mark')))
+
+		# check the results
+		self.assertTrue(os.path.exists(get_complete_filename('task2_foobar.sh')))
+		self.assertTrue(os.path.exists(get_complete_filename('task2_foobar.py')))
+
+		os.remove(get_complete_filename('task2_foobar.sh'))
+		os.remove(get_complete_filename('task2_foobar.py'))
+
+		# update the marking time for the first task
+		time.sleep(2) # wait long enough for the marking update to have an effect
+		os.system('touch %s' % get_complete_filename('.tasks2-task1.mark'))
+
+		# now re-run the task
+		p.get_task('task2').run()
+
+		# check to see if task2 ran again
+		self.assertTrue(os.path.exists(get_complete_filename('task2_foobar.sh')))
+		self.assertTrue(os.path.exists(get_complete_filename('task2_foobar.py')))
+
+		# done!
+		p.unmark_all_tasks(recur=True)
+
+	def test_task_comment(self):
+		p = get_pipeline(get_complete_filename('task_comm1'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		p.run()
+
+		p.unmark_all_tasks(recur=True)
+	
+	def test_block_comment(self):
+		p = get_pipeline(get_complete_filename('comm1'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		p.run()
+
+		p.unmark_all_tasks(recur=True)
+
+	def test_block_comment_line_shift(self):
+		p = get_pipeline(get_complete_filename('comm2'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		try:
+			p.run()
+			self.fail('this pipeline should have a faulty block')
+		except UnknownVariableException, e:
+			self.assertEquals(e.lineno,6)
+
+		p.unmark_all_tasks(recur=True)
+
 	def test_run_extend1(self):
 		p = get_pipeline(get_complete_filename('extend1'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
@@ -128,7 +191,7 @@ class BasicTestCase(unittest.TestCase):
 
 class ForceTestCase(unittest.TestCase):
 
-	def test_no_passthrough(self):
+	def test_passthrough(self):
 		p = get_pipeline(get_complete_filename('force_test'),
 						 default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
@@ -154,8 +217,8 @@ class ForceTestCase(unittest.TestCase):
 		t3.run(force=FORCE_NONE)
 
 		# check the output
-		self.assertFalse(os.path.exists(t1_file))
-		self.assertFalse(os.path.exists(t2_file))
+		self.assertTrue(os.path.exists(t1_file))
+		self.assertTrue(os.path.exists(t2_file))
 		self.assertTrue(os.path.exists(t3_file))
 
 		if os.path.exists(t1_file):
@@ -178,6 +241,10 @@ class ForceTestCase(unittest.TestCase):
 		t3_file = get_complete_filename('force_test_t3.txt')
 		t3 = p.get_task('task3')
 			
+		# mark tasks
+		t1.run()
+		t3.mark()
+
 		# clear out the products of this pipeline
 		if os.path.exists(t1_file):
 			os.remove(t1_file)
@@ -186,16 +253,13 @@ class ForceTestCase(unittest.TestCase):
 		if os.path.exists(t3_file):
 			os.remove(t3_file)
 
-		# mark tasks
-		t3.mark()
-
 		# run task 3
 		t3.run(force=FORCE_NONE)
 
 		# check the output
 		self.assertFalse(os.path.exists(t1_file))
-		self.assertFalse(os.path.exists(t2_file))
-		self.assertFalse(os.path.exists(t3_file))
+		self.assertTrue(os.path.exists(t2_file))
+		self.assertTrue(os.path.exists(t3_file))
 
 		if os.path.exists(t1_file):
 			os.remove(t1_file)

@@ -1,0 +1,12 @@
+
+task1:
+	code.sh:
+		ls
+		pwd
+#		foobar
+
+task2:
+	code.sh:
+		ls
+		pwd
+#	blargh
