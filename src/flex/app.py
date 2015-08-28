@@ -126,20 +126,19 @@ def do_dry_run(args):
 
 def do_run(args):
 	parser = argparse.ArgumentParser('fx run',description='run a flex pipeline')
-	parser.add_argument('-f','--force',choices=['NONE','TOP','ALL'],default='NONE',
-		help='force tasks to run, even if they is already marked. NONE will not force any marked tasks to run; TOP will force the named task or the top-level tasks in the pipeline to run; ALL will force all marked tasks encountered in the dependency tree to run.')
-	parser.add_argument('-D','--no_dependencies',action='store_true',help='do not evaluate or run any dependencies - only this task will run regardless of the state of its dependencies. This option is only valid if tasks have been specified.')
+	parser.add_argument('-f','--force',choices=['NONE','TOP','ALL','SOLO'],default='NONE',
+		help='force tasks to run, even if they is already marked. NONE will not force any marked tasks to run; TOP will force the named task or the top-level tasks in the pipeline to run; ALL will force all marked tasks encountered in the dependency tree to run; SOLO will force the specified task to run, but NOT any of its dependencies (regardless of their state).')
 	parser.add_argument('pipeline_file',help='the pipeline to run')
 	parser.add_argument('task_name',nargs='?',help='the specific task to run. If omitted, the entire pipeline will be run')
 
 	
 	args = parser.parse_args(args)
 
-	force_val_lookup = {'NONE':FORCE_NONE, 'TOP':FORCE_TOP, 'ALL':FORCE_ALL}
-	force_val = force_val_lookup[args.force]
+	force_val_lookup = {'NONE':FORCE_NONE, 'TOP':FORCE_TOP, 'ALL':FORCE_ALL, 'SOLO':FORCE_SOLO}
+	force_val = force_val_lookup[args.force.upper()]
 
-	if not args.task_name and args.no_dependencies:
-		logger.error('the no_dependencies (-D) flag can only be used when tasks have been explicitly specified')
+	if not args.task_name and force_val == FORCE_SOLO:
+		logger.error('force status SOLO can only be used when tasks have been explicitly specified')
 		sys.exit(-1)
 
 	# load the pipeline
