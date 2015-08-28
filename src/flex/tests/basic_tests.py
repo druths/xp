@@ -213,6 +213,9 @@ class ForceTestCase(unittest.TestCase):
 		# mark tasks
 		t2.mark()
 
+		# make sure that the timestamps are different
+		time.sleep(1)
+
 		# run task 3
 		t3.run(force=FORCE_NONE)
 
@@ -243,7 +246,11 @@ class ForceTestCase(unittest.TestCase):
 			
 		# mark tasks
 		t1.run()
+
 		t3.mark()
+
+		# make sure the time stamps are different
+		time.sleep(1)
 
 		# clear out the products of this pipeline
 		if os.path.exists(t1_file):
