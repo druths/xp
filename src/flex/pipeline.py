@@ -681,6 +681,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	Raise exception if the task was invalid otherwise, 
 	return (next_lineno,Task)
 	"""
+	live_deps_string = re.compile('^([^#]*)')
 	valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
 	var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
 	delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
@@ -689,7 +690,14 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 
 	start_lineno = lineno
 
+	####
 	# parse the dependency list
+
+	# drop any comment end part
+	m = live_deps_string.match(dep_str)
+	dep_str = m.group(1)
+
+	# extract the dependencies
 	dependencies = dep_str.split()
 	
 	for dep in dependencies:
