@@ -1,0 +1,12 @@
+
+task1:
+	code.sh:
+		touch $PLN(t1.txt)
+
+task2: task1
+	code.sh:
+		touch $PLN(t2.txt)
+
+task3: task2
+	code.sh:
+		touch $PLN(t3.txt)

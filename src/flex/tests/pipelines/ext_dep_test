@@ -1,0 +1,5 @@
+extend ext_dep_test0
+
+task3: task2
+	code.sh:
+		touch $PLN(t3.txt)
