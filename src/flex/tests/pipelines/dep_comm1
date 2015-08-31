@@ -1,0 +1,8 @@
+
+task1:
+	code.sh:
+		echo 'hi'
+
+task2: task1 # this is it!
+	code.sh:
+		echo 'task2'

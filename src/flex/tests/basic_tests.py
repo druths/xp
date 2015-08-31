@@ -129,6 +129,11 @@ class BasicTestCase(unittest.TestCase):
 		p.run()
 
 		p.unmark_all_tasks(recur=True)
+
+	def test_dep_comment(self):
+		p = get_pipeline(get_complete_filename('dep_comm1'),default_prefix=USE_FILE_PREFIX)
+
+		# we should get here.
 	
 	def test_block_comment(self):
 		p = get_pipeline(get_complete_filename('comm1'),default_prefix=USE_FILE_PREFIX)
