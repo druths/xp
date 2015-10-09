@@ -26,4 +26,18 @@ v0.2
 		* block_type.check()
 		* fx command: check_block_support
 
-	* modularize the code block execution code
+	* Modularize the code block execution code
+
+	* Add parallel task execution
+
+v0.3
+----
+
+	* Add task generators
+
+Distant Future
+--------------
+
+	* Add distributed task execution (flex cluster)
+
+	* Implement notebook interface (ala ipython & jupyter)
