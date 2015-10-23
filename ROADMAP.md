@@ -5,13 +5,9 @@ Flex Roadmap
 v0.1
 ----
 
-	* Write documentation
-
 	* Write tutorial blog post
 
-	* Make minor webpage: flex.derekruths.com or flex.networkdynamics.org
-
-	* Make Stackoverflow space
+	* Make a couple example pipelines
 
 	* Post to Reddit
 
@@ -61,3 +57,4 @@ Distant Future
 	* Add distributed task execution (flex cluster)
 
 	* Implement notebook interface (ala ipython & jupyter)
+		* Add support for comment blocks that have markdown format or something.  This would allow pipelines to be workbooks in themselves.
