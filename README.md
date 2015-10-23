@@ -14,6 +14,8 @@ hard to reconstruct.
 Flex makes it easy to create and update workflows (called pipelines) while
 always retaining a connection to the data that the pipeline produced.
 
+*Detailed documentation is available on [readthedocs](http://flexds.readthedocs.org/en/latest/).*
+
 # Installation #
 
 Install flex by running
