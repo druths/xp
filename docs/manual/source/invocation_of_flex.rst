@@ -72,9 +72,9 @@ marked, you have two options.
 	task.
 
 	* ``run -f=ALL`` overrides the markings on all tasks encountered during the
-	run. *Be careful* when using this option as it can cause tasks far down the
-	dependency tree to be re-run.
+	run. *Be careful* when using this option as it can cause tasks far down the dependency tree to be re-run.
 
+	* ``run -f=SOLO`` ignores any dependencies the named task may have and runs just that task.
 
 
 .. _dependency_running:
