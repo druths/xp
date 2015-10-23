@@ -1,6 +1,6 @@
 
-Feature TODO list
-~~~~~~~~~~~~~~~~~
+Flex Roadmap
+~~~~~~~~~~~~
 	
 v0.1
 ----
@@ -33,7 +33,27 @@ v0.2
 v0.3
 ----
 
-	* Add task generators
+	* Add task generators. Something like this::
+
+		# there are two general approaches we might take here...
+
+		# Approach 1: internal task generators
+		gen_${year}_data: download_${year}_data
+			generator.py:
+				for x in range(2011,2015):
+					yield {'year':x}
+
+		# Approach 2: combined task generators
+		download_${year}_data (dd):
+			code.sh:
+				curl http://some.web.server/myfile_${year}.tgz > $PLN(myfile_${year}.tgz)
+
+		gen_${year}_data (gd): download_${year}_data
+			code.sh:
+				blah blah
+
+		task generator:
+			
 
 Distant Future
 --------------
