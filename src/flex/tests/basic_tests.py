@@ -455,6 +455,20 @@ class LineNoTestCase(unittest.TestCase):
 		
 		return
 
+	def test_multiline_comment(self):
+		p = get_pipeline(get_complete_filename('lineno_comment1'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+
+		try:
+			p.run()
+			self.fail()
+		except ParseException as e:
+			self.assertTrue(e.source_file.endswith('lineno_comment1'))
+			self.assertEquals(e.lineno,8)
+
+		return
+
 class CommentingTestCase(unittest.TestCase):
 
 	def test_in_task_comment(self):
@@ -488,6 +502,21 @@ class CommentingTestCase(unittest.TestCase):
 			self.fail()
 		except ParseException as e:
 			self.assertTrue(e.lineno,6)
+
+	def test_in_preamble_multiline_comment(self):
+		p = get_pipeline(get_complete_filename('multiline_comment3'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()	
+
+	def test_in_tasks_multiline_comment(self):
+		"""
+		This tests a multi-line comment that is between tasks
+		"""
+		p = get_pipeline(get_complete_filename('multiline_comment4'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()	
 
 class SuffixCheckingTestCase(unittest.TestCase):
 

@@ -625,13 +625,19 @@ def parse_pipeline(pipeline_file,default_prefix):
 	var_del_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
 
 	lineno = 0
+	in_comment_block = False
 	in_preamble = True
 	statements = []
 	while lineno < len(lines) and in_preamble:
 		cur_line = lines[lineno].strip()
 
 		m = extend_pattern.match(cur_line)
-		if m:	
+		if in_comment_block:
+			if cur_line.startswith('###'):
+				in_comment_block = False
+		elif cur_line.startswith('###'):
+			in_comment_block = True
+		elif m:	
 			# load in the pipeline
 			fname = m.group(1)
 			complete_fname = os.path.join(os.path.dirname(pipeline_file),fname)
@@ -676,11 +682,19 @@ def parse_pipeline(pipeline_file,default_prefix):
 	# read the tasks
 	task_pattern = re.compile('^(%s)\s*:(.*)$' % VAR_PATTERN)
 	tasks = []
+	in_comment_block = False
 
 	while lineno < len(lines):
 		cur_line = lines[lineno].rstrip()
 
-		if len(cur_line) == 0 or cur_line.strip().startswith('#'):
+		if in_comment_block:
+			lineno += 1
+			if cur_line.startswith('###'):
+				in_comment_block = False
+		elif cur_line.startswith('###'):
+			lineno += 1
+			in_comment_block = True
+		elif len(cur_line) == 0 or cur_line.strip().startswith('#'):
 			lineno += 1
 		else:
 			m = task_pattern.match(cur_line)

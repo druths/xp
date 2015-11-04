@@ -1,0 +1,17 @@
+
+X=2
+Y=2
+
+task1:
+
+	code.sh:
+		echo hello there
+
+###
+This is a comment
+that takes up multiple lines
+###
+
+task2:
+	code.sh:
+		echo task2
