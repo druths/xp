@@ -23,7 +23,7 @@ The entire project consists of four pipelines.
 
 For this analysis to run, you'll need to be in a Unix (or cygwin) environment with the following installed:
 
-  * standard unix command line tools (`cut`, `grep`, `tr`)
+  * standard unix command line tools (`curl`, `sort`, `cut`, `grep`, `tr`)
   * Python 2.7 or later
   * flex
 
