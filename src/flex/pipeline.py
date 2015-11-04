@@ -702,6 +702,20 @@ def parse_pipeline(pipeline_file,default_prefix):
 	# return the pipeline
 	return pipeline
 
+def find_indentation_match(lines,lineno,pattern):
+	"""
+	Find the first line that matches the specified pattern and isn't an empty line
+	Return None if there aren't any lines found.
+	"""
+	while lineno < len(lines):
+		if len(lines[lineno].strip()) == 0:
+			lineno += 1
+		else:
+			return pattern.match(lines[lineno])
+	
+	# if we got here, we ran out of lines
+	return None
+
 def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	"""
 	Parse the task.
@@ -742,11 +756,13 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	blocks = []
 	in_task = True	
 
-	im = None if lineno >= len(lines) else indention_pattern.match(lines[lineno])
+	im = find_indentation_match(lines,lineno,indention_pattern) 
+	logger.debug('match = %s' % im)
 	indent_seq = None
 	if im is not None:
 		# there's valid content
 		indent_seq = im.group(1)
+		logger.debug('indent_seq len = %d' % len(indent_seq))
 		code_pattern = re.compile('^%scode\.(\w+):(.*)$' % indent_seq)
 		export_pattern = re.compile('^%sexport:(.*)$' % indent_seq)
 	else:
@@ -758,7 +774,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 		mc = code_pattern.match(cur_line)
 		me = export_pattern.match(cur_line)
 
-		if cur_line.startswith('%s#' % indent_seq):
+		if cur_line.startswith('%s#' % indent_seq) or len(cur_line.strip()) == 0:
 			lineno += 1
 		elif mc:
 			lang = mc.group(1)
@@ -811,7 +827,7 @@ def read_block_content(lines,lineno,indent_seq):
 	"""
 	indentation_pattern = re.compile('^(%s\s+)[^\s]' % indent_seq)
 
-	im = None if lineno >= len(lines) else indentation_pattern.match(lines[lineno])
+	im = find_indentation_match(lines,lineno,indentation_pattern)
 	inner_indent_seq = None
 	if im is not None:
 		inner_indent_seq = im.group(1)

@@ -480,3 +480,12 @@ class SuffixCheckingTestCase(unittest.TestCase):
 						 default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
+
+class IndentingTestCase(unittest.TestCase):
+
+	def test_space_after_block_def(self):
+		p = get_pipeline(get_complete_filename('indent_space.fx'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()
+	
