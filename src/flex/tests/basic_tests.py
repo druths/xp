@@ -408,6 +408,7 @@ class LineNoTestCase(unittest.TestCase):
 
 		try:
 			p.run()
+			self.fail()
 		except ParseException as e:
 			self.assertTrue(e.source_file.endswith('lineno1'))
 			self.assertEquals(e.lineno,4)
@@ -421,8 +422,44 @@ class LineNoTestCase(unittest.TestCase):
 
 		try:
 			p.run()
+			self.fail()
 		except ParseException as e:
 			self.assertTrue(e.source_file.endswith('lineno1'))
 			self.assertEquals(e.lineno,4)
 
 		return
+
+	def test_in_task_comment(self):
+		p = get_pipeline(get_complete_filename('comment3'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t = p.get_task('prep_tsvs')
+
+		try:
+			t.run()
+			self.fail()
+		except ParseException as e:
+			self.assertTrue(e.source_file.endswith('comment3'))
+			self.assertEquals(e.lineno,22)
+		
+		return
+
+class CommentingTestCase(unittest.TestCase):
+
+	def test_in_task_comment(self):
+		p = get_pipeline(get_complete_filename('comment1'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t = p.get_task('prep_tsvs')
+
+		t.run()
+
+	def test_above_task_comment(self):
+		p = get_pipeline(get_complete_filename('comment2'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		t = p.get_task('prep_tsvs')
+
+		t.run()
+
+

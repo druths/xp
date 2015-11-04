@@ -1,0 +1,19 @@
+# Download the relevant files for analysis
+
+download_dc_data:
+	code.sh:
+		echo "download_dc_data"
+
+download_marvel_data:
+	code.sh:
+		echo "download_marvel_data"
+
+prep_tsvs: download_dc_data download_marvel_data
+	# convert to TSVs because the CSV format is evil
+	code.py:
+		print 'prep_tsvs'
+
+
+				
+			
+		
