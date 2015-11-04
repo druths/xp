@@ -7,6 +7,8 @@ Men](http://fivethirtyeight.com/features/women-in-comic-books/).  We'll compare
 the distributions of traits among male and female superheros.  The results are
 surprising and not surprising at the very same time.
 
+_Thanks to the folks at fivethirtyeight for sharing this data!_
+
 ### Files
 
 The entire project consists of four pipelines.
