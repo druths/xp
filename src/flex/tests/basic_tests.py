@@ -473,4 +473,10 @@ class CommentingTestCase(unittest.TestCase):
 
 		t.run()
 
+class SuffixCheckingTestCase(unittest.TestCase):
 
+	def test_no_suffix_use(self):
+		p = get_pipeline(get_complete_filename('use_suffix_dep.fx'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()

@@ -12,6 +12,8 @@ import blocks
 logger = logging.getLogger(os.path.basename(__file__))
 
 # Constants
+DEFAULT_PIPELINE_FILE_SUFFIX = 'fx'
+
 PIPELINE_PREFIX_VARNAME = 'FLEX_PLN_PREFIX'
 
 FILE_PREFIX = 'file'
@@ -37,10 +39,21 @@ FORCE_CHOICES = [FORCE_NONE,FORCE_TOP,FORCE_ALL,FORCE_SOLO]
 _pipelines = {}
 _under_construction = set()
 
+def fetch_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
+	
+	try:
+		return get_pipeline(filename,default_prefix)
+	except PipelineNotFound:
+		return get_pipeline('%s.%s' % (filename,DEFAULT_PIPELINE_FILE_SUFFIX),default_prefix)
+
 def get_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
 
 	# resolve filename to canonical absolute path
 	filename = os.path.realpath(os.path.abspath(filename))
+
+	# check if the file exists
+	if not os.path.exists(filename):
+		raise PipelineNotFound(filename)
 
 	# this function is not thread-safe.  So if there's a call for a pipeline
 	# that is currently under construction, it's an indication of a circular
@@ -148,7 +161,7 @@ class Pipeline:
 		for stmt in self.preamble:
 
 			if isinstance(stmt,ExtendStatement):
-				extended_pipeline = get_pipeline(stmt.filename)
+				extended_pipeline = fetch_pipeline(stmt.filename)
 
 				# insert the preamble
 				new_preamble.extend(extended_pipeline.preamble)
@@ -169,7 +182,7 @@ class Pipeline:
 
 			elif isinstance(stmt,UseStatement):
 				filename = os.path.join(os.path.dirname(self.abs_filename),stmt.filename)
-				used_pipeline = get_pipeline(filename)
+				used_pipeline = fetch_pipeline(filename)
 				logger.debug('adding pipeline %s with alias %s' % (used_pipeline.name,stmt.alias))
 				self.used_pipelines[stmt.alias] = used_pipeline
 			elif isinstance(stmt,PrefixStatement):
@@ -558,6 +571,11 @@ class CodeBlock:
 				raise BlockFailed
 		else:
 			raise BlockFailed, 'unknown block type: %s' % self.lang
+
+class PipelineNotFound(Exception):
+	def __init__(self,pipeline_file):
+		Exception.__init__(self,'Unable to find pipeline: %s' % pipeline_file)
+		self.pipeline_file = pipeline_file
 
 class BlockFailed(Exception):
 	pass

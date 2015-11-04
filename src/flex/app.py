@@ -34,7 +34,7 @@ def do_tasks(args):
 	args = parser.parse_args(args)
 
 	# load the pipeline
-	p = get_pipeline(args.pipeline_file)
+	p = fetch_pipeline(args.pipeline_file)
 
 	# print out all the tasks in sort order
 	make_tname_str = lambda x: '%s/%s' % (x.pipeline.name,x.name)
@@ -61,7 +61,7 @@ def do_unmark(args):
 	args = parser.parse_args(args)
 
 	# load the pipeline
-	p = get_pipeline(args.pipeline_file)
+	p = fetch_pipeline(args.pipeline_file)
 
 	if not args.task_names:
 		do_it = args.force
@@ -96,7 +96,7 @@ def do_mark(args):
 	args = parser.parse_args(args)
 
 	# load the pipeline
-	p = get_pipeline(args.pipeline_file)
+	p = fetch_pipeline(args.pipeline_file)
 
 	if not args.task_names:
 		do_it = args.force
@@ -142,7 +142,7 @@ def do_run(args):
 		sys.exit(-1)
 
 	# load the pipeline
-	p = get_pipeline(args.pipeline_file)
+	p = fetch_pipeline(args.pipeline_file)
 
 	if not args.task_name:
 		# run the whole pipeline
