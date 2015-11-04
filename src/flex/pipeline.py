@@ -34,8 +34,18 @@ FORCE_ALL = 'force_all'
 FORCE_SOLO = 'force_solo' # just run this task - don't run any others
 FORCE_CHOICES = [FORCE_NONE,FORCE_TOP,FORCE_ALL,FORCE_SOLO]
 
+def normalize_pipeline_fname(pipeline_fname):
+	"""
+	Remove the default pipeline file suffix if it's there.
+	"""
+	name = pipeline_fname
+	if pipeline_fname.endswith('.%s' % DEFAULT_PIPELINE_FILE_SUFFIX):
+		name = pipeline_fname[:-(len(DEFAULT_PIPELINE_FILE_SUFFIX)+1)]
+
+	return name
+
 #################
-# the factory function 
+# the factory functions
 _pipelines = {}
 _under_construction = set()
 
@@ -126,7 +136,7 @@ def dep_graph_iter(all_tasks):
 
 class Pipeline:
 	def __init__(self,abs_filename,preamble_stmts,tasks,default_prefix):
-		self.name = os.path.basename(abs_filename)
+		self.name = normalize_pipeline_fname(os.path.basename(abs_filename))
 		self.abs_filename = abs_filename
 		self.preamble = preamble_stmts
 		self.tasks = tasks
@@ -351,10 +361,13 @@ class PrefixStatement:
 	
 	def get_prefix(self,pipeline_abs_fname):
 		if self.prefix is None:
+			# remove the file suffix if needed
+			name = normalize_pipeline_fname(pipeline_abs_fname)
+
 			if self.prefix_type == FILE_PREFIX:
-				return '%s_' % pipeline_abs_fname
+				return '%s_' % name #pipeline_abs_fname
 			elif self.prefix_type == DIR_PREFIX:
-				dir_prefix = '%s_data' % pipeline_abs_fname
+				dir_prefix = '%s_data' % name #pipeline_abs_fname
 				return os.path.join(dir_prefix,'')
 			else:
 				# it should be impossible to get here

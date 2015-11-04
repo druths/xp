@@ -10,7 +10,19 @@ def get_complete_filename(fname):
 	return os.path.join(BASE_PATH,'pipelines',fname)
 
 class PrefixTestCase(unittest.TestCase):
-	
+
+	def test_remove_suffix(self):
+		p = get_pipeline(get_complete_filename('rm_suffix_prefix.fx'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()
+
+		# check the output
+		self.assertTrue(os.path.exists(get_complete_filename('rm_suffix_prefix_hello_world.txt')))
+
+		os.remove(get_complete_filename('rm_suffix_prefix_hello_world.txt'))
+
+		p.unmark_all_tasks(recur=True)
+
 	def test_default_file_prefix(self):
 		p = get_pipeline(get_complete_filename('dfile_prefix'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
