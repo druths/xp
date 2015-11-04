@@ -1,0 +1,11 @@
+
+task1:
+	###
+	This is a comment
+	that takes up multiple lines
+this line should cause problems
+	###
+
+	code.sh:
+		echo hello there
+

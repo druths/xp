@@ -755,6 +755,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	# now parse blocks
 	blocks = []
 	in_task = True	
+	in_comment_block = False
 
 	im = find_indentation_match(lines,lineno,indention_pattern) 
 	logger.debug('match = %s' % im)
@@ -771,9 +772,21 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	while lineno < len(lines) and in_task:
 		cur_line = lines[lineno].rstrip()
 
+		if in_comment_block:
+			if not cur_line.startswith(indent_seq):
+				raise ParseException(pipeline_file,lineno,'all lines in a comment block must be indented')
+			lineno += 1
+			if cur_line.rstrip() == ('%s###' % indent_seq):
+				in_comment_block = False
+			continue
+
 		mc = code_pattern.match(cur_line)
 		me = export_pattern.match(cur_line)
 
+		if cur_line.startswith('%s###' % indent_seq):
+			# we're starting a multi-line comment block
+			in_comment_block = True
+			lineno += 1
 		if cur_line.startswith('%s#' % indent_seq) or len(cur_line.strip()) == 0:
 			lineno += 1
 		elif mc:

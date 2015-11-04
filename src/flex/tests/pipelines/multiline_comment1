@@ -1,0 +1,12 @@
+
+task1:
+	###
+	This is a comment
+	that takes up multiple lines
+	and should be handled properly by the
+	code
+	###
+
+	code.sh:
+		echo hello there
+
