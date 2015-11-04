@@ -151,7 +151,7 @@ def do_run(args):
 		t = p.get_task(args.task_name)
 
 		if t is None:
-			logger.error('task %s does not exist' % tname)
+			logger.error('task %s does not exist' % args.task_name)
 			sys.exit(-1)
 		else:
 			t.run(force=force_val)
