@@ -681,12 +681,13 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	Raise exception if the task was invalid otherwise, 
 	return (next_lineno,Task)
 	"""
+	indention_pattern = re.compile('^(\s+)[^\s]')
 	live_deps_string = re.compile('^([^#]*)')
 	valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
 	var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
 	delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
-	code_pattern = re.compile('^\tcode\.(\w+):(.*)$')
-	export_pattern = re.compile('^\texport:(.*)$')
+	code_pattern = None #re.compile('^\tcode\.(\w+):(.*)$')
+	export_pattern = None #re.compile('^\texport:(.*)$')
 
 	start_lineno = lineno
 
@@ -705,9 +706,20 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 			raise ParseException(pipeline_file,lineno,'expected a dependency, got: %s' % dep)
 
 	lineno += 1
+
 	# now parse blocks
 	blocks = []
 	in_task = True	
+
+	im = None if lineno >= len(lines) else indention_pattern.match(lines[lineno])
+	indent_seq = None
+	if im is not None:
+		# there's valid content
+		indent_seq = im.group(1)
+		code_pattern = re.compile('^%scode\.(\w+):(.*)$' % indent_seq)
+		export_pattern = re.compile('^%sexport:(.*)$' % indent_seq)
+	else:
+		in_task = False
 
 	while lineno < len(lines) and in_task:
 		cur_line = lines[lineno].rstrip()
@@ -715,14 +727,14 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 		mc = code_pattern.match(cur_line)
 		me = export_pattern.match(cur_line)
 
-		if cur_line.strip().startswith('#'):
+		if cur_line.startswith('%s#' % indent_seq):
 			lineno += 1
 		elif mc:
 			lang = mc.group(1)
 			arg_str = mc.group(2)
 			logger.debug('found code block at line %d' % lineno)
 			block_lineno = lineno
-			lineno,content,content_linenos = read_block_content(lines,lineno+1)
+			lineno,content,content_linenos = read_block_content(lines,lineno+1,indent_seq)
 
 			blocks.append(CodeBlock(lang,arg_str,content,pipeline_file,block_lineno))
 		elif me:
@@ -734,7 +746,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 				raise ParseException(pipeline_file,lineno,
 					'export block does not accept an argument string')
 
-			new_lineno,content,content_linenos = read_block_content(lines,lineno+1)
+			new_lineno,content,content_linenos = read_block_content(lines,lineno+1,indent_seq)
 			
 			# parse the content as variable assignments
 			statements = []
@@ -760,26 +772,39 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 
 	return lineno,Task(task_name,dependencies,blocks,pipeline_file,start_lineno)
 
-def read_block_content(lines,lineno):
+def read_block_content(lines,lineno,indent_seq):
 	"""
-	Extract block content - begins with two tabs.
+	Extract block content - begins with indent_seq + whatever the new intentation is
 
 	Return: (next_lineno,content,content_linenos)
 	"""
+	indentation_pattern = re.compile('^(%s\s+)[^\s]' % indent_seq)
+
+	im = None if lineno >= len(lines) else indentation_pattern.match(lines[lineno])
+	inner_indent_seq = None
+	if im is not None:
+		inner_indent_seq = im.group(1)
+	else:
+		# there's no content in this block
+		return lineno, [], []
+
 	last_lineno = lineno
 	content_lines = []
 	content_linenos = []
 	while last_lineno < len(lines):
-		if lines[last_lineno].startswith('\t\t'):
+		if lines[last_lineno].startswith(inner_indent_seq):
 			content_lines.append(lines[last_lineno])
 			content_linenos.append(last_lineno)
-		elif len(lines[last_lineno].strip()) == 0 or lines[last_lineno].strip().startswith('#'):
-			pass
+		elif len(lines[last_lineno].strip()) == 0:
+			# empty lines should be added to the block
+			content_lines.append(inner_indent_seq)
+			content_linenos.append(last_lineno)
 		else:
 			break
 		last_lineno += 1
 	
-	return last_lineno,map(lambda x: x[2:].rstrip(),content_lines),content_linenos
+	il = len(inner_indent_seq)
+	return last_lineno,map(lambda x: x[il:].rstrip(),content_lines),content_linenos
 
 variable_pattern = re.compile('([\w\d_]+|\{[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']

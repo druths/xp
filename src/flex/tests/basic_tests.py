@@ -123,12 +123,20 @@ class BasicTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_task_comment(self):
-		p = get_pipeline(get_complete_filename('task_comm1'),default_prefix=USE_FILE_PREFIX)
-		p.unmark_all_tasks(recur=True)
+		"""
+		Comments not at the appropriate indentation level are not allowed
+		"""
+		try:
+			p = get_pipeline(get_complete_filename('task_comm1'),default_prefix=USE_FILE_PREFIX)
+			self.fail()
+		except ParseException, e:
+			self.assertEquals(e.lineno,4)
 
-		p.run()
+		#p.unmark_all_tasks(recur=True)
 
-		p.unmark_all_tasks(recur=True)
+		#p.run()
+
+		#p.unmark_all_tasks(recur=True)
 
 	def test_dep_comment(self):
 		p = get_pipeline(get_complete_filename('dep_comm1'),default_prefix=USE_FILE_PREFIX)
@@ -144,16 +152,19 @@ class BasicTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 
 	def test_block_comment_line_shift(self):
-		p = get_pipeline(get_complete_filename('comm2'),default_prefix=USE_FILE_PREFIX)
-		p.unmark_all_tasks(recur=True)
-
 		try:
-			p.run()
+			p = get_pipeline(get_complete_filename('comm2'),default_prefix=USE_FILE_PREFIX)
+			# p.unmark_all_tasks(recur=True)
+
+			# p.run()
 			self.fail('this pipeline should have a faulty block')
-		except UnknownVariableException, e:
+		except ParseException, e:
 			self.assertEquals(e.lineno,6)
 
-		p.unmark_all_tasks(recur=True)
+#		except UnknownVariableException, e:
+#			self.assertEquals(e.lineno,6)
+
+		# p.unmark_all_tasks(recur=True)
 
 	def test_run_extend1(self):
 		p = get_pipeline(get_complete_filename('extend1'),default_prefix=USE_FILE_PREFIX)
