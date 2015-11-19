@@ -173,13 +173,18 @@ The ``use`` keyword also allows easier or more readable aliases to be defined::
 Inheriting another pipeline
 ###########################
 
-In some cases, a pipeline will be a specialization of another pipeline - it will need to use the same tasks, but perhaps define constants or parameters differently.  This can often arise in machine learning contexts - different pipelines might invoke the same classifier, only with different parameters.
+In some cases, a pipeline will be a specialization of another pipeline - it
+will need to use the same tasks, but perhaps define constants or parameters
+differently.  This can often arise in machine learning contexts - different
+pipelines might invoke the same classifier, only with different parameters.
 
-One way to achieve this without duplicating large sections of code is to write the shared code (tasks and variables) into one pipeline and have all the related pipelines inherit that pipeline using the ``extend`` keyword.
+One way to achieve this without duplicating large sections of code is to write
+the shared code (tasks and variables) into one pipeline and have all the
+related pipelines inherit that pipeline using the ``extend`` keyword.
 
-For example, suppose that we have a pipeline named ``ml_master`` which declares two
-tasks ``train`` and ``classify`` that use the value of the variable ``GRID_SIZE`` to
-build and run the classifier.
+For example, suppose that we have a pipeline named ``ml_master`` which declares
+two tasks ``train`` and ``classify`` that use the value of the variable
+``GRID_SIZE`` to build and run the classifier.
 
 We could build a pipeline ``ml_0.5`` that inherits the behavior of ``ml_master``,
 but with a specific choice of ``GRID_SIZE``::
@@ -189,6 +194,15 @@ but with a specific choice of ``GRID_SIZE``::
 	set GRID_SIZE=0.5
 
 .. _tasks_section:
+
+##############################
+Declaring an abstract pipeline
+##############################
+
+Pipelines that are meant to be inherited, might not be meant to be run.  This
+can be explicitly declared by using the ``is_abstract`` keyword in the preamble
+of the pipeline.  A pipeline declared in this way cannot be run (but any
+pipelines that extend it can).
 
 *******************
 The tasks section
