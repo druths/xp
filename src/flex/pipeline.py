@@ -141,6 +141,10 @@ class Pipeline:
 		self.preamble = preamble_stmts
 		self.tasks = tasks
 
+		self.is_abstract = False
+
+		self.config = {}
+
 		default_prefix = list(default_prefix) + ['',-1]
 		self.prefix_stmt = PrefixStatement(*default_prefix)
 
@@ -174,7 +178,9 @@ class Pipeline:
 				extended_pipeline = fetch_pipeline(stmt.filename)
 
 				# insert the preamble
-				new_preamble.extend(extended_pipeline.preamble)
+				epremable = filter(lambda x: type(x) != AbstractStatement,extended_pipeline.preamble)
+
+				new_preamble.extend(epremable)
 
 				# insert the tasks before the tasks defined here
 				existing_tasks = self.tasks
@@ -189,7 +195,10 @@ class Pipeline:
 						raise Exception, 'conflict in aliases for used pipelines: %s' % k
 					else:
 						self.used_pipelines[k] = v	
-
+			elif isinstance(stmt,AbstractStatement):
+				self.is_abstract = True
+			elif isinstance(stmt,ConfigStatement):
+				stmt.update_config_dict(self.config)
 			elif isinstance(stmt,UseStatement):
 				filename = os.path.join(os.path.dirname(self.abs_filename),stmt.filename)
 				used_pipeline = fetch_pipeline(filename)
@@ -317,6 +326,9 @@ class Pipeline:
 				pipeline.unmark_all_tasks(recur=True)
 
 	def run(self,force=FORCE_NONE):
+		if self.is_abstract:
+			raise Exception('an abstract pipeline cannot be run: %s' % self.abs_filename)
+
 		self.build_context()	
 
 		# run the leaf tasks - this will trigger other tasks as needed
@@ -409,6 +421,49 @@ class PrefixStatement:
 		else:
 			raise Exception, 'unknown prefix type: %s' % self.prefix_type
 
+class AbstractStatement:
+	def __init__(self,source_file,lineno):
+		self.source_file = source_file
+		self.lineno = lineno
+
+class ConfigStatement:
+	def __init__(self,config_var,config_val,is_sticky,source_file,lineno):
+		self.varname = config_var
+		self.value = config_val
+		self.is_sticky = is_sticky
+		self.source_file = source_file
+		self.lineno = lineno
+
+	def get_variable(self):
+		return self.varname
+
+	def get_value(self):
+		if self.value is None:
+			return None
+		else:
+			return self.value.strip()
+
+	def update_config_dict(self,config):
+		levels = self.varname.split('.')
+
+		while len(levels) > 1:
+			varname = levels.pop(0)
+			if varname not in config:
+				config[varname] = {}
+			
+			config = config[varname]
+
+			if type(config) != dict:
+				raise IllegalValueException(self.source_file,self.lineno,'attempt to treat scalar as a config dictionary %s' % varname)	
+
+		varname = levels.pop(0)
+		if varname in config and type(config[varname]) == dict:
+			raise IllegalValueException(self.source_file,self.lineno,'attempt to overwrite config dictionary %s' % varname)
+
+		config[varname] = self.value
+	
+		return
+
 class ExtendStatement:
 	def __init__(self,filename,source_file,lineno):
 		self.filename = filename
@@ -480,6 +535,9 @@ class Task:
 			return os.path.getmtime(self.mark_file())
 
 	def run(self,force=FORCE_NONE):
+
+		if self.pipeline.is_abstract:
+			raise Exception('an abstract pipeline cannot be run: %s' % self.pipeline.abs_filename)
 
 		self.pipeline.pre_run(self)
 
@@ -600,7 +658,13 @@ class ParseException(Exception):
 		self.source_file = source_file
 		self.lineno = lineno+1 # all internal line numbers are index 0
 
-
+class IllegalValueException(Exception):
+	
+	def __init__(self,source_file,lineno,message):
+		Exception.__init__(self,message)
+		self.source_file = source_file
+		self.lineno = lineno+1 # all internal line numbers are index 0
+	
 class UnknownVariableException(Exception):
 	
 	def __init__(self,source_file,lineno,message):
@@ -608,6 +672,7 @@ class UnknownVariableException(Exception):
 		self.source_file = source_file
 		self.lineno = lineno+1 # all internal line numbers are index 0
 
+CONFIG_VAR_PATTERN = '\w[\w\d_]*(\.\w[\w\d_]*)*'
 VAR_PATTERN = '\w[\w\d_]*'
 FILE_PATTERN = '.+?'
 
@@ -618,6 +683,8 @@ def parse_pipeline(pipeline_file,default_prefix):
 	lines = open(pipeline_file,'r').readlines()
 
 	# read the preamble
+	abstract_pattern = re.compile('^is_abstract$')
+	config_pattern = re.compile('^config\s+(\*?)(%s)\s*=(.*)?$' % CONFIG_VAR_PATTERN)
 	extend_pattern = re.compile('^extend\s+(%s)$' % FILE_PATTERN)
 	use_pattern = re.compile('^use\s+(%s)(\s+as\s+(%s))?$' % (FILE_PATTERN,VAR_PATTERN))
 	prefix_pattern = re.compile('^prefix\s+(file|dir)(\s+%s)?\s*$' % FILE_PATTERN)
@@ -671,10 +738,22 @@ def parse_pipeline(pipeline_file,default_prefix):
 
 							logger.debug('found prefix: %s, %s' % (prefix_type,prefix))
 							statements.append(PrefixStatement(prefix_type,prefix,pipeline_file,lineno))
-						elif len(cur_line) == 0 or cur_line.startswith('#'):
-							pass
 						else:
-							in_preamble = False
+							m = config_pattern.match(cur_line)
+							if m:
+								is_sticky = True if m.group(1) == '*' else False
+								config_var = m.group(2)
+								config_val = m.groups()[-1].strip()
+								logger.debug('found config statement: %s = %s' % (config_var,config_val))
+								statements.append(ConfigStatement(config_var,config_val,is_sticky,pipeline_file,lineno))
+							else:
+								m = abstract_pattern.match(cur_line)
+								if m:
+									statements.append(AbstractStatement(pipeline_file,lineno))
+								elif len(cur_line) == 0 or cur_line.startswith('#'):
+									pass
+								else:
+									in_preamble = False
 
 		if in_preamble:
 			lineno += 1
