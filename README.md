@@ -1,18 +1,40 @@
 
 # flex [![Build Status](https://travis-ci.org/druths/flex.svg?branch=master)](https://travis-ci.org/druths/flex) [![Doc Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://flexds.readthedocs.org/en/latest/) #
 
+Data science projects get disorganized quickly. They involve interdependent
+computational tasks that use different languages and libraries, tasks require
+or produce large volumes of data (that typically sit in many files or database
+tables), and a lot of exploratory code is written before the right solution is
+found. This results in a mess of scripts and code snippets with unclear
+relationships to one another, a sprawling array of data files which are
+difficult to trace back to the process that created them, and no documents
+that show how the big picture idea is connected to the individual code and
+data files present in the project.
+
+Flex is a command-line tool (and associated work process and code library) that
+provides a comprehensive and flexible way of organizing data science projects.
+To this end, it has three primary goals:
+
+  1. Capture the task-level logic and structure of a data science project
+
+  1. Make it possible to trace data back to the specific tasks (and commands)
+     that produced it
+
+  1. Connect documentation of tasks to the task logic itself
+
+It aims to achieve these three things without introducing any overhead.  You
+won't have to write more code than you currently are doing, write or maintain
+any extra documentation, or use fancy data management solutions. Whatever you
+are already doing, flex is compatible with it.
+
 Flex is a command-line tool for building data-science pipelines, particularly
-in the research context. It draws its inspiration from make and linguini.
+in the research context. By *pipeline*, we mean writing tasks that depend on
+one another.  Imagine *make*, except with a lot of intelligence built into it
+that is relevant to data science work.
 
-Flex seeks to address a fundamental issue that haunts every brand of
-data-science: over the course of a project, data becomes disconnected from the
-processes that produced it. Once data loses its context, even the most basic
-interpretive tasks become exceedingly difficult.  Moreover, attempts to
-reproduce or rebuild data become fraught as the details involved are gone or
-hard to reconstruct.
-
-Flex makes it easy to create and update workflows (called pipelines) while
-always retaining a connection to the data that the pipeline produced.
+Moreover, flex makes it easy to create and update pipelines while always
+retaining a connection to the data that the pipeline produced and is
+self-documenting at the same time.
 
 *Detailed documentation is available on [readthedocs](http://flexds.readthedocs.org/en/latest/).*
 
