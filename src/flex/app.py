@@ -8,7 +8,7 @@ from flex.pipeline import *
 
 logger = logging.getLogger(os.path.basename(__file__))
 
-LOG_LEVELS = ['DEBUG','WARN','ERROR','CRITICAL']
+LOG_LEVELS = ['DEBUG','LOG','WARN','ERROR','CRITICAL']
 COMMANDS = ['tasks','unmark','mark','run','wipe','dry_run']
 
 def do_info(args):
