@@ -199,10 +199,10 @@ but with a specific choice of ``GRID_SIZE``::
 Declaring an abstract pipeline
 ##############################
 
-Pipelines that are meant to be inherited, might not be meant to be run.  This
-can be explicitly declared by using the ``is_abstract`` keyword in the preamble
-of the pipeline.  A pipeline declared in this way cannot be run (but any
-pipelines that extend it can).
+Pipelines that are meant to be extended, might not be meant to be run.  This
+can be explicitly declared by giving the pipeline the ``.afx`` (abstract flex)
+file suffix. A pipeline declared in this way cannot be run (but any pipelines
+that extend it can).
 
 *******************
 The tasks section
