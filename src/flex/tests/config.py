@@ -12,7 +12,7 @@ def get_complete_filename(fname):
 class AbstractionTestCase(unittest.TestCase):
 	
 	def test_run_abstract_pipeline(self):
-		p = get_pipeline(get_complete_filename('abs_pipeline.fx'),default_prefix=USE_FILE_PREFIX)
+		p = get_pipeline(get_complete_filename('abs_pipeline.afx'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		try:
 			p.run()
@@ -25,14 +25,3 @@ class AbstractionTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
-class ConfigValueSettingTestCase(unittest.TestCase):
-	
-	def test_top_level_configs(self):
-		p = get_pipeline(get_complete_filename('tlc_pipeline.fx'),default_prefix=USE_FILE_PREFIX)
-
-		self.assertEquals(p.config['foobar'],'barfoo')
-
-	def test_nested_configs(self):
-		p = get_pipeline(get_complete_filename('nlc_pipeline.fx'),default_prefix=USE_FILE_PREFIX)
-
-		self.assertEquals(p.config['foo']['bar']['foo'],'barfoo')

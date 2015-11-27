@@ -1,4 +1,4 @@
-extend abs_pipeline
+extend abs_pipeline.afx
 
 t2: t1
 	code.sh:
