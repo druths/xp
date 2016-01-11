@@ -87,7 +87,7 @@ def do_unmark(args):
 			task.unmark()
 		
 def do_mark(args):
-	parser = argparse.ArgumentParser('fx unmark',description='mark one or more tasks')
+	parser = argparse.ArgumentParser('fx mark',description='mark one or more tasks')
 	parser.add_argument('-f','--force',action='store_true',help='set this to actually mark an entire pipeline or pipelines')
 	parser.add_argument('-r','--recur',action='store_true',default=False,help='mark all dependent tasks as well')
 	parser.add_argument('pipeline_file',help='the pipeline to mark tasks in')
