@@ -1,3 +1,5 @@
+is_abstract
+
 use downloader as dld
 
 # Instantiations of this template should set this

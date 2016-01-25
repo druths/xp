@@ -1,21 +1,30 @@
 
 # flex [![Build Status](https://travis-ci.org/druths/flex.svg?branch=master)](https://travis-ci.org/druths/flex) [![Doc Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://flexds.readthedocs.org/en/latest/) #
 
-Data science projects get disorganized quickly. They involve interdependent
-computational tasks that use different languages and libraries, tasks require
-or produce large volumes of data (that typically sit in many files or database
-tables), and a lot of exploratory code is written before the right solution is
-found. This results in a mess of scripts and code snippets with unclear
-relationships to one another, a sprawling array of data files which are
-difficult to trace back to the process that created them, and no documents
-that show how the big picture idea is connected to the individual code and
-data files present in the project.
+*Muscle for data science*
 
-Flex is a command-line tool (and associated work process and code library) that
-provides a comprehensive and flexible way of organizing data science projects.
+Data science projects get disorganized quickly. Every test involves a new
+script, each script requires a panoply of arguments and produces one or more
+data files.  Keeping track of all this implied structure is a pain - what is
+this script for?  What does it depend on?  What created this data file? Which
+parameters updated this table in the database?
+
+Enter flex - a utility that allows you to express and run all the computational
+tasks in a project. Crucially, it captures the specific parameters used for
+each task, the data files produced, and any dependencies that task has on other
+tasks. All this is captured in files called *pipelines* (which can even be
+connected to one another).  Toss in some helpful comments, and you have
+executable documentation for your project.
+
+This may sound a lot like scientific notebook environments (e.g., Jupyter and
+Mathematica), but there are some key differences. Notebooks only allow linear
+dependencies between computational tasks - which is a tremendous simplification
+of even moderate-sized projects.
+
 To this end, it has three primary goals:
 
-  1. Capture the task-level logic and structure of a data science project
+  1. Capture the task-level logic and structure of a data science project in a
+     language-agnostic way
 
   1. Make it possible to trace data back to the specific tasks (and commands)
      that produced it
