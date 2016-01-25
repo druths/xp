@@ -53,7 +53,7 @@ Install flex off [pypi](https://pypi.python.org/pypi?name=flexds&:action=display
 
 	pip install flexds
 
-or install from source by downloadng from github and running
+or install from source by downloading from github and running
 
 	python setup.py install
 
