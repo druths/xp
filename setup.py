@@ -3,7 +3,7 @@ import os.path
 import sys
 
 setup(
-	name = 'Flex pipeline',
+	name = 'flex',
 	version = '1.0',
 	packages = ['flex','flex.tests','flex.tests.pipelines'],
 	package_data = {'flex.tests.pipelines' : ['*'] },
