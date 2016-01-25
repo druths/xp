@@ -49,7 +49,11 @@ self-documenting at the same time.
 
 # Installation #
 
-Install flex by running
+Install flex off [pypi](https://pypi.python.org/pypi?name=flexds&:action=display) using
+
+	pip install flexds
+
+or install from source by downloadng from github and running
 
 	python setup.py install
 
