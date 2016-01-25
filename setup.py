@@ -8,7 +8,7 @@ setup(
 	packages = ['flex','flex.tests','flex.tests.pipelines'],
 	package_data = {'flex.tests.pipelines' : ['*'] },
 
-	scripts = ['../scripts/fx'],
+	scripts = ['scripts/fx'],
 
 	# # dependencies
 
