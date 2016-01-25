@@ -169,6 +169,10 @@ placed in a pipeline-specific directory).  Future references to this file via
 `$PLN(data.tsv)` will access only this pipeline's version of the file - even if
 many pipelines are downloading the files at various times.
 
+(Note that `$` is treated as a special character by flex and so identifiers such
+as `$PATH` or `$1` will be parsed as flex variables. To avoid this, escape the
+`$` using `\`, e.g. `\$PATH` or `\$1`).
+
 ## Extending Pipelines ##
 
 In some cases, one will want to run exactly the same pipeline over and over
