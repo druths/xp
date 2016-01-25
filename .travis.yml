@@ -2,7 +2,7 @@ language: python
 python:
   - "2.7"
 script: 
-  - cd src; python -m flex.test
+  - python -m flex.test
 notifications:
   email:
     recipients:
