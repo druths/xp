@@ -1,4 +1,4 @@
 #!/bin/sh
 
-python -m flex.app $@
+python -m xp.app $@
 

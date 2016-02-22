@@ -1,6 +1,4 @@
-is_abstract
-
-use downloader as dld
+use downloader.xp as dld
 
 # Instantiations of this template should set this
 # ALIGN = 5 (good or bad)

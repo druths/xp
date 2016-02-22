@@ -20,7 +20,7 @@ import argparse
 import logging
 import time
 
-from flex.pipeline import *
+from xp.pipeline import *
 
 logger = logging.getLogger(os.path.basename(__file__))
 
