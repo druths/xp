@@ -1,5 +1,5 @@
 
-# xp [![Build Status](https://travis-ci.org/druths/xp.svg?branch=master)](https://travis-ci.org/druths/xp) [![Doc Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://xp.readthedocs.org/en/latest/) #
+# xp [![Build Status](https://travis-ci.org/druths/xp.svg?branch=master)](https://travis-ci.org/druths/xp) [![Doc Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://xpds.readthedocs.org/en/latest/) #
 
 *Expressive pipelines for data science*
 
