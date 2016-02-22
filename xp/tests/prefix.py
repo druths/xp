@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 import unittest
-from flex.pipeline import get_pipeline, expand_variables, PIPELINE_PREFIX_VARNAME, ParseException, USE_FILE_PREFIX
-import flex.pipeline as pipeline
+from xp.pipeline import get_pipeline, expand_variables, PIPELINE_PREFIX_VARNAME, ParseException, USE_FILE_PREFIX
+import xp.pipeline as pipeline
 import os, os.path
 import shutil
 
@@ -28,7 +28,7 @@ def get_complete_filename(fname):
 class PrefixTestCase(unittest.TestCase):
 
 	def test_remove_suffix(self):
-		p = get_pipeline(get_complete_filename('rm_suffix_prefix.fx'),default_prefix=USE_FILE_PREFIX)
+		p = get_pipeline(get_complete_filename('rm_suffix_prefix.xp'),default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 

@@ -13,17 +13,17 @@ The purposes of a pipeline are to:
 
   * connect the pipeline logic to the intermediate and final data produced
 
-In much the same way as a make file, a flex pipeline consists of two parts:
+In much the same way as a make file, a xp pipeline consists of two parts:
 
   * *tasks* - these perform coherent chunks of work.  In this regard, tasks are
-	very much the heart of the flex pipeline. In a departure from make, flex
+	very much the heart of the xp pipeline. In a departure from make, xp
 	tasks themselves consist of blocks which are small language-specific units
 	of work. For more details on this, see :ref:`tasks_section`.
 
-  * *global definitions* - while the tasks are the heart of flex, some
+  * *global definitions* - while the tasks are the heart of xp, some
 	additional configurations are needed in order to make tasks easier to write
 	and make connections between the pipeline and other pipelines.  As a
-	result, a flex pipeline starts with a global section, which allows for the
+	result, a xp pipeline starts with a global section, which allows for the
 	definition of variables as well as for the specification of pipeline
 	configurations and connections.  For more details on this, see
 	:ref:`global_section`.
@@ -91,7 +91,7 @@ Comments
 ##########
 
 Thoroughly commenting pipelines is an important part of making them readable
-and maintainable. Within a flex pipeline, a comment is always one line long:
+and maintainable. Within a xp pipeline, a comment is always one line long:
 beginning with a ``#`` symbol and continuing to the end of the line.
 
 ******************
@@ -122,7 +122,7 @@ reference.
 Configuring data prefixing
 ##########################
 
-The flex system provides an easy way to create and access files and directories
+The xp system provides an easy way to create and access files and directories
 within the pipelines namespace.  The namespace can be either a file prefix name
 or a directory (see :ref:`data_namespacing` for details).  The ``prefix`` command
 is used to configure this option for a given pipeline.
@@ -200,7 +200,7 @@ Declaring an abstract pipeline
 ##############################
 
 Pipelines that are meant to be extended, might not be meant to be run.  This
-can be explicitly declared by giving the pipeline the ``.afx`` (abstract flex)
+can be explicitly declared by giving the pipeline the ``.axp`` (abstract xp)
 file suffix. A pipeline declared in this way cannot be run (but any pipelines
 that extend it can).
 
@@ -216,7 +216,7 @@ unit of work.
 The structure of a task
 #######################
 
-Since flex is entirely concerned with capturing computational workflows, tasks
+Since xp is entirely concerned with capturing computational workflows, tasks
 contain code in executable units called *blocks*.  In order to link tasks to
 one another, a task can depend on one or more other tasks (called its
 *dependencies*).
@@ -318,7 +318,7 @@ detail in :ref:`variables_and_functions`.  While discussing blocks, however,
 several points are worth noting.
 
 Before the block content is passed to the appropriate execution system (e.g.,
-the python interpreter), flex variables and functions are first evaluated.  All
+the python interpreter), xp variables and functions are first evaluated.  All
 variables and functions begin with a ``$`` character::
 
 	# var_test pipeline
@@ -333,12 +333,12 @@ variables and functions begin with a ``$`` character::
 			ls -l $in_dir > $tmp_file
 			cut -f1 > $out_fname
 
-In the example above, the shell code block makes use of three flex-defined
+In the example above, the shell code block makes use of three xp-defined
 variables, ``in_dir``, ``tmp_file``, and ``out_fname``.  Notice that it also
 references the shell variable ``PATH`` and that, in order to make this reference,
 a backslash is used to escape the ``$`` character.
 
-**Configuring the execution environment.** All flex variables are exported into the shell environment in which the execution system will run.  For example::
+**Configuring the execution environment.** All xp variables are exported into the shell environment in which the execution system will run.  For example::
 
 	PYTHONPATH=.	
 
@@ -411,7 +411,7 @@ line of text.
 		code.sh:
 			ls -lh $(which $cmd)
 
-In this example, the which command is run.  Notice that flex variables can be
+In this example, the which command is run.  Notice that xp variables can be
 used within functions.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -460,7 +460,7 @@ Consider the following example pipeline::
 			import mylib
 			mylib.run($iter_num)
 
-In it, a number of flex variables and functions are used.  Notably, the
+In it, a number of xp variables and functions are used.  Notably, the
 reference to ``$iter_num`` is resolved to ``10`` before the python code is
 called.
 

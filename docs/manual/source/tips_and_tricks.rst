@@ -6,7 +6,7 @@
 Tips and Tricks
 ***************
 
-Flex is a too young to have conventions, per say.  But there are some tips and
+xp is a too young to have conventions, per say.  But there are some tips and
 tricks that can be useful.
 
 ###############

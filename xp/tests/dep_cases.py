@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 import unittest
-from flex.pipeline import *
-import flex.pipeline as pipeline
+from xp.pipeline import *
+import xp.pipeline as pipeline
 import os, os.path
 import time
 

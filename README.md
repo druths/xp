@@ -1,7 +1,7 @@
 
-# flex [![Build Status](https://travis-ci.org/druths/flex.svg?branch=master)](https://travis-ci.org/druths/flex) [![Doc Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://flexds.readthedocs.org/en/latest/) #
+# xp [![Build Status](https://travis-ci.org/druths/xp.svg?branch=master)](https://travis-ci.org/druths/xp) [![Doc Status](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat)](http://xp.readthedocs.org/en/latest/) #
 
-*Muscle for data science*
+*Expressive pipelines for data science*
 
 Data science projects get disorganized quickly. Every test involves a new
 script, each script requires a panoply of arguments and produces one or more
@@ -9,7 +9,7 @@ data files.  Keeping track of all this implied structure is a pain - what is
 this script for?  What does it depend on?  What created this data file? Which
 parameters updated this table in the database?
 
-Enter flex - a utility that allows you to express and run all the computational
+Enter xp - a utility that allows you to express and run all the computational
 tasks in a project. Crucially, it captures the specific parameters used for
 each task, the data files produced, and any dependencies that task has on other
 tasks. All this is captured in files called *pipelines* (which can even be
@@ -34,22 +34,22 @@ To this end, it has three primary goals:
 It aims to achieve these three things without introducing any overhead.  You
 won't have to write more code than you currently are doing, write or maintain
 any extra documentation, or use fancy data management solutions. Whatever you
-are already doing, flex is compatible with it.
+are already doing, xp is compatible with it.
 
-Flex is a command-line tool for building data-science pipelines, particularly
+xp is a command-line tool for building data-science pipelines, particularly
 in the research context. By *pipeline*, we mean writing tasks that depend on
 one another.  Imagine *make*, except with a lot of intelligence built into it
 that is relevant to data science work.
 
-Moreover, flex makes it easy to create and update pipelines while always
+Moreover, xp makes it easy to create and update pipelines while always
 retaining a connection to the data that the pipeline produced and is
 self-documenting at the same time.
 
-*Detailed documentation is available on [readthedocs](http://flexds.readthedocs.org/en/latest/).*
+*Detailed documentation is available on [readthedocs](http://xpds.readthedocs.org/en/latest/).*
 
 # Installation #
 
-Install flex off [pypi](https://pypi.python.org/pypi?name=flexds&:action=display) using
+Install xp off [pypi](https://pypi.python.org/pypi?name=flexds&:action=display) using
 
 	pip install flexds
 
@@ -120,7 +120,7 @@ different languages - making it possible to stitch together workflows that
 involve different languages. A single task can even contain multiple blocks for
 the same or different languages.
 
-Currently, Flex supports four block types:
+Currently, xp supports four block types:
 
   - *export* (`export`) - this allows environment variables to be set and 
   	unset within the context of a specific task
@@ -138,9 +138,9 @@ system. To customize the executable used, environment variables can be set
 Future releases will support additional languages natively and also provide a
 plugin mechanism for adding new block types. 
 
-Once a pipeline has been written, it can be run using the flex command-line tool.
+Once a pipeline has been written, it can be run using the xp command-line tool.
 
-  fx run pipeline_file
+  xp run pipeline_file
 
 The command-line tool also allows easy marking (`mark`), unmarking (`unmark`),
 and querying task info (`tasks`) for a pipeline.
@@ -152,7 +152,7 @@ effectively the same or similar pipelines using different parameter settings:
 files can get overwritten and, more generally, the user typically loses track
 of exactly which files came from what setting.
 
-In Flex, files produced by a pipeline can be easily bound to their pipeline,
+In xp, files produced by a pipeline can be easily bound to their pipeline,
 eliminating this confusion.
 
 ```
@@ -173,14 +173,14 @@ placed in a pipeline-specific directory).  Future references to this file via
 `$PLN(data.tsv)` will access only this pipeline's version of the file - even if
 many pipelines are downloading the files at various times.
 
-(Note that `$` is treated as a special character by flex and so identifiers such
-as `$PATH` or `$1` will be parsed as flex variables. To avoid this, escape the
+(Note that `$` is treated as a special character by xp and so identifiers such
+as `$PATH` or `$1` will be parsed as xp variables. To avoid this, escape the
 `$` using `\`, e.g. `\$PATH` or `\$1`).
 
 ## Extending Pipelines ##
 
 In some cases, one will want to run exactly the same pipeline over and over
-with different parameter settings. To support this, Flex allows *extending*
+with different parameter settings. To support this, xp allows *extending*
 pipelines.  Much like subclassing, extending a pipeline brings all the content
 of one pipeline into another one.  Assume we are clustering some data using the
 process here (in pipeline `cluster_pln`).  The process is parameterized by the
@@ -222,7 +222,7 @@ so that each pipeline will have its own separate stored data.
 ## Connecting Pipelines Together ##
 
 It's quite reasonable to expect that one pipeline could feed into another
-pipeline. Flex supports this - pipelines can depend on the tasks in other
+pipeline. xp supports this - pipelines can depend on the tasks in other
 pipelines - and in doing so, create even larger workflows that retain their
 nice modular organization.
 
@@ -279,20 +279,20 @@ label_articles: build_crf_model
 
 ## Examples ##
 
-See the `examples/` directory in the flex root directory to see some real
+See the `examples/` directory in the xp root directory to see some real
 pipelines that demonstrate the core features of the tool.
 
 # Command-line usage #
 
-The `fx` command provides several core capabilities:
+The `xp` command provides several core capabilities:
 
-  - `fx tasks <pipeline>` will out info about one or more tasks in the pipeline including whether they are marked
+  - `xp tasks <pipeline>` will out info about one or more tasks in the pipeline including whether they are marked
 
-  - `fx run <pipeline>` will run a pipeline (or a task within a pipeline)
+  - `xp run <pipeline>` will run a pipeline (or a task within a pipeline)
 
-  - `fx mark <pipeline>` will mark specific tasks or an entire pipeline
+  - `xp mark <pipeline>` will mark specific tasks or an entire pipeline
 
-  - `fx unmark <pipeline>` will unmark specific tasks or an entire pipeline
+  - `xp unmark <pipeline>` will unmark specific tasks or an entire pipeline
 
 All of these commands have help messages to help their correct use.
 

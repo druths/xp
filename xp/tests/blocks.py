@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 import unittest
-from flex.pipeline import get_pipeline, USE_FILE_PREFIX
-import flex.pipeline as pipeline
+from xp.pipeline import get_pipeline, USE_FILE_PREFIX
+import xp.pipeline as pipeline
 import os, os.path
 
 # check for gnuplot

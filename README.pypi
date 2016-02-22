@@ -1,4 +1,4 @@
-*Muscle for data science*
+*Expressive pipelines for data science*
 
 Data science projects get disorganized quickly. Every test involves a new
 script, each script requires a panoply of arguments and produces one or more
@@ -6,7 +6,7 @@ data files.  Keeping track of all this implied structure is a pain - what is
 this script for?  What does it depend on?  What created this data file? Which
 parameters updated this table in the database?
 
-Enter flex - a utility that allows you to express and run all the computational
+Enter xp - a utility that allows you to express and run all the computational
 tasks in a project. Crucially, it captures the specific parameters used for
 each task, the data files produced, and any dependencies that task has on other
 tasks. All this is captured in files called *pipelines* (which can even be
@@ -16,4 +16,4 @@ executable documentation for your project.
 It aims to achieve all this without introducing any overhead.  You
 won't have to write more code than you currently are doing, write or maintain
 any extra documentation, or use fancy data management solutions. Whatever you
-are already doing, flex is compatible with it.
+are already doing, xp is compatible with it.

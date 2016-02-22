@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 import unittest
-from flex.pipeline import *
-import flex.pipeline as pipeline
+from xp.pipeline import *
+import xp.pipeline as pipeline
 import os, os.path
 import time
 
@@ -537,7 +537,7 @@ class CommentingTestCase(unittest.TestCase):
 class IndentingTestCase(unittest.TestCase):
 
 	def test_space_after_block_def(self):
-		p = get_pipeline(get_complete_filename('indent_space.fx'),
+		p = get_pipeline(get_complete_filename('indent_space.xp'),
 						 default_prefix=USE_FILE_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()

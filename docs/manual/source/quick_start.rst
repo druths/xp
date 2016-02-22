@@ -2,7 +2,7 @@
 Quick Start
 ===========
 
-Flex makes it easy to create and update computational workflows (called
+xp makes it easy to create and update computational workflows (called
 pipelines) that always retain a connection to the data that the pipeline
 produced.
 
@@ -10,11 +10,11 @@ produced.
 Installation
 ------------
 
-The easiest way to install flex is using pypi::
+The easiest way to install xp is using pypi::
 
-	pip install flex
+	pip install xp
 
-Alternatively, install flex by downloading the source and running::
+Alternatively, install xp by downloading the source and running::
 
 	python setup.py install
 
@@ -82,7 +82,7 @@ different languages - making it possible to stitch together workflows that
 involve different languages. A single task can even contain multiple blocks for
 the same or different languages.
 
-Currently, Flex supports four block types:
+Currently, xp supports four block types:
 
   - *export* (``export``) - this allows environment variables to be set and 
   	unset within the context of a specific task
@@ -100,9 +100,9 @@ system. To customize the executable used, environment variables can be set
 Future releases will support additional languages natively and also provide a
 plugin mechanism for adding new block types. 
 
-Once a pipeline has been written, it can be run using the flex command-line tool::
+Once a pipeline has been written, it can be run using the xp command-line tool::
 
-  fx run <pipeline_file>
+  xp run <pipeline_file>
 
 The command-line tool also allows easy marking (``mark``), unmarking (``unmark``),
 and querying task info (``tasks``) for a pipeline.
@@ -116,7 +116,7 @@ effectively the same or similar pipelines using different parameter settings:
 files can get overwritten and, more generally, the user typically loses track
 of exactly which files came from what setting.
 
-In Flex, files produced by a pipeline can be easily bound to their pipeline,
+In xp, files produced by a pipeline can be easily bound to their pipeline,
 eliminating this confusion::
 
 	DATA_URL=http://foobar:8080/data.tsv
@@ -140,7 +140,7 @@ Extending Pipelines
 ~~~~~~~~~~~~~~~~~~~~
 
 In some cases, one will want to run exactly the same pipeline over and over
-with different parameter settings. To support this, Flex allows *extending*
+with different parameter settings. To support this, xp allows *extending*
 pipelines.  Much like subclassing, extending a pipeline brings all the content
 of one pipeline into another one.  Assume we are clustering some data using the
 process here (in pipeline ``cluster_pln``).  The process is parameterized by the
@@ -180,7 +180,7 @@ Connecting Pipelines Together
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It's quite reasonable to expect that one pipeline could feed into another
-pipeline. Flex supports this - pipelines can depend on the tasks in other
+pipeline. xp supports this - pipelines can depend on the tasks in other
 pipelines - and in doing so, create even larger workflows that retain their
 nice modular organization.
 
@@ -235,22 +235,22 @@ so we can create other pipelines that use ``cluster_a2``, shown next::
 Examples
 ~~~~~~~~
 
-See the ``examples/`` directory in the flex root directory to see some real
+See the ``examples/`` directory in the xp root directory to see some real
 pipelines that demonstrate the core features of the tool.
 
 ----------------------
 Command-line usage
 ----------------------
 
-The ``fx`` command provides several core capabilities:
+The ``xp`` command provides several core capabilities:
 
-  - ``fx tasks <pipeline>`` will out info about one or more tasks in the pipeline including whether they are marked
+  - ``xp tasks <pipeline>`` will out info about one or more tasks in the pipeline including whether they are marked
 
-  - ``fx run <pipeline>`` will run a pipeline (or a task within a pipeline)
+  - ``xp run <pipeline>`` will run a pipeline (or a task within a pipeline)
 
-  - ``fx mark <pipeline>`` will mark specific tasks or an entire pipeline
+  - ``xp mark <pipeline>`` will mark specific tasks or an entire pipeline
 
-  - ``fx unmark <pipeline>`` will unmark specific tasks or an entire pipeline
+  - ``xp unmark <pipeline>`` will unmark specific tasks or an entire pipeline
 
 All of these commands have help messages to help their correct use.
 

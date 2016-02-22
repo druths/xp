@@ -3,24 +3,24 @@ import os.path
 import sys
 
 setup(
-	name = 'flexds',
+	name = 'xp',
 	version = '1.1',
-	packages = ['flex','flex.tests','flex.tests.pipelines'],
-	package_data = {'flex.tests.pipelines' : ['*'] },
+	packages = ['xp','xp.tests','xp.tests.pipelines'],
+	package_data = {'xp.tests.pipelines' : ['*'] },
 
-	scripts = ['scripts/fx'],
+	scripts = ['scripts/xp'],
 
 	# # dependencies
 
 	# # testing suite
-	#test_suite = 'flex.test',
+	#test_suite = 'xp.test',
 
 	# # project metadata
 	author = 'Derek Ruths',
 	author_email = 'druths@networkdynamics.org',
-	description = 'Flex is a framework for building and executing computing pipelines',
+	description = 'xp is a framework for building and executing computing pipelines',
 	license = 'Apache',
-	url = 'https://github.com/druths/flex',
+	url = 'https://github.com/druths/xp',
 	keywords = ['data science','research','build','automation'],
 	classifiers=[
 		'Development Status :: 5 - Production/Stable',

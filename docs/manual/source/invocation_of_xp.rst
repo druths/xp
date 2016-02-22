@@ -3,10 +3,10 @@
 	:maxdepth: 2
 
 *****************
-The ``fx`` command
+The ``xp`` command
 *****************
 
-All of flex's functionality is accessed through the ``fx`` command line tool.
+All of xp's functionality is accessed through the ``xp`` command line tool.
 You'll first need a pipeline, of course.  For illustration purposes, throughout
 this section, we'll use the pipeline ``foobar``, which has the following
 contents::
@@ -21,7 +21,7 @@ contents::
 		code.sh:
 			cut -f 1 $PLN(dataset1.tsv) > $PLN(col1.txt)
 
-A bit of vocabulary will help our discussion of the behavior of the ``fx``
+A bit of vocabulary will help our discussion of the behavior of the ``xp``
 command:
 
   * a *direct dependency of a task* (say, ``taskX``) is another task which
@@ -47,20 +47,20 @@ Running a pipeline
 
 The most fundamental activity we'll need to do is running a tasks in a pipeline. 
 
-**Running a complete pipeline.** To run all tasks in your pipeline, use ``fx
+**Running a complete pipeline.** To run all tasks in your pipeline, use ``xp
 run <pipeline_file>``. This will run all unmarked terminal tasks and their
 dependencies. They are run in dependency order - so the terminal task will be
 the last task run.  For details on the rules that govern if and when a
 dependency is run, see :ref:`dependency_running`.
 
-**Running a specific task.** To run a specific task in your pipeline, use ``fx
+**Running a specific task.** To run a specific task in your pipeline, use ``xp
 run <pipeline_file> <task_name>``.  This will run the task (if unmarked) as
 well as its dependencies.
 
 **Running marked tasks.** If you do want to run a task that has already been
 marked, you have two options.
 
-  1. Unmark the relevant task using the ``fx unmark`` command.
+  1. Unmark the relevant task using the ``xp unmark`` command.
 
   2. Use the ``-f`` flag to force tasks to be run. This flag takes an argument
   which determines what tasks are forced to run. 
@@ -83,7 +83,7 @@ marked, you have two options.
 When and if dependencies are run
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, when flex wants to run a task (we'll call this the *final task*),
+By default, when xp wants to run a task (we'll call this the *final task*),
 it will first check to see if any of the dependencies of that task need to be
 run first.
 
@@ -106,18 +106,18 @@ marked.
 Marking and unmarking tasks
 ###########################
 
-To mark a specific task, use ``fx mark <pipeline_file> <task_name>``. If the
+To mark a specific task, use ``xp mark <pipeline_file> <task_name>``. If the
 task specified is not marked, it will be marked.  If the task is already
 marked, then the timestamp on the task's mark will be updated.
 
-To unmark a specific task, use ``fx unmark <pipeline_file> <task_name>``. This
+To unmark a specific task, use ``xp unmark <pipeline_file> <task_name>``. This
 will remove the mark on the task (if it exists).
 
 #################################
 Checking status of pipeline tasks
 #################################
 
-You can use the ``fx tasks <pipeline_file>`` command to print out information
+You can use the ``xp tasks <pipeline_file>`` command to print out information
 about all the tasks in the pipeline. This will print the tasks in the pipeline
 as well as any tasks in other pipelines on which it depends. The timestamp of
 any marked tasks will be given.

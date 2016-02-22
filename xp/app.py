@@ -44,7 +44,7 @@ def do_export(args):
 	pass
 
 def do_tasks(args):
-	parser = argparse.ArgumentParser('fx tasks',description='print information on tasks in a particular pipeline')
+	parser = argparse.ArgumentParser('xp tasks',description='print information on tasks in a particular pipeline')
 	parser.add_argument('pipeline_file',help='the pipeline of interest')
 
 	args = parser.parse_args(args)
@@ -68,7 +68,7 @@ def do_tasks(args):
 		print info_str
 
 def do_unmark(args):
-	parser = argparse.ArgumentParser('fx unmark',description='unmark one or more tasks')
+	parser = argparse.ArgumentParser('xp unmark',description='unmark one or more tasks')
 	parser.add_argument('-f','--force',action='store_true',help='set this to actually unmark an entirely pipeline or pipelines')
 	parser.add_argument('-r','--recur',action='store_true',default=False,help='unmark all dependent tasks as well')
 	parser.add_argument('pipeline_file',help='the pipeline to unmark tasks in')
@@ -103,7 +103,7 @@ def do_unmark(args):
 			task.unmark()
 		
 def do_mark(args):
-	parser = argparse.ArgumentParser('fx mark',description='mark one or more tasks')
+	parser = argparse.ArgumentParser('xp mark',description='mark one or more tasks')
 	parser.add_argument('-f','--force',action='store_true',help='set this to actually mark an entire pipeline or pipelines')
 	parser.add_argument('-r','--recur',action='store_true',default=False,help='mark all dependent tasks as well')
 	parser.add_argument('pipeline_file',help='the pipeline to mark tasks in')
@@ -141,7 +141,7 @@ def do_dry_run(args):
 	pass
 
 def do_run(args):
-	parser = argparse.ArgumentParser('fx run',description='run a flex pipeline')
+	parser = argparse.ArgumentParser('xp run',description='run a flex pipeline')
 	parser.add_argument('-f','--force',choices=['NONE','TOP','ALL','SOLO'],default='NONE',
 		help='force tasks to run, even if they is already marked. NONE will not force any marked tasks to run; TOP will force the named task or the top-level tasks in the pipeline to run; ALL will force all marked tasks encountered in the dependency tree to run; SOLO will force the specified task to run, but NOT any of its dependencies (regardless of their state).')
 	parser.add_argument('pipeline_file',help='the pipeline to run')
@@ -173,7 +173,7 @@ def do_run(args):
 			t.run(force=force_val)
 
 def main():
-	parser = argparse.ArgumentParser('fx')
+	parser = argparse.ArgumentParser('xp')
 	parser.add_argument('-l','--log_level',choices=LOG_LEVELS,default='ERROR')
 	parser.add_argument('command',choices=COMMANDS)
 	parser.add_argument('cmd_args',nargs=argparse.REMAINDER)

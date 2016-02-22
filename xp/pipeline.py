@@ -29,7 +29,7 @@ import blocks
 logger = logging.getLogger(os.path.basename(__file__))
 
 # Constants
-DEFAULT_PIPELINE_FILE_SUFFIX = 'fx'
+DEFAULT_PIPELINE_FILE_SUFFIX = 'xp'
 
 PIPELINE_PREFIX_VARNAME = 'FLEX_PLN_PREFIX'
 
@@ -151,7 +151,7 @@ class Pipeline:
 		self.preamble = preamble_stmts
 		self.tasks = tasks
 
-		self.is_abstract = self.abs_filename.endswith('.afx')
+		self.is_abstract = self.abs_filename.endswith('.axp')
 
 		default_prefix = list(default_prefix) + ['',-1]
 		self.prefix_stmt = PrefixStatement(*default_prefix)
