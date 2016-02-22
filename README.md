@@ -49,9 +49,9 @@ self-documenting at the same time.
 
 # Installation #
 
-Install xp off [pypi](https://pypi.python.org/pypi?name=flexds&:action=display) using
+Install xp off [pypi](https://pypi.python.org/pypi?name=xp&:action=display) using
 
-	pip install flexds
+	pip install xp
 
 or install from source by downloading from github and running
 
