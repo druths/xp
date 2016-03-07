@@ -37,6 +37,7 @@ FILE_PREFIX = 'file'
 DIR_PREFIX = 'dir'
 
 USE_FILE_PREFIX = (FILE_PREFIX,None)
+USE_DIR_PREFIX = (DIR_PREFIX,None)
 
 LANG_FXN_LOOKUP = {	'sh':'run_shell', 
 					'py':'run_python',
