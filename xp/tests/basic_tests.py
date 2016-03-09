@@ -35,15 +35,15 @@ class BasicTestCase(unittest.TestCase):
 		self.assertEquals(len(ep.preamble),0)
 		self.assertEquals(len(ep.tasks),0)
 	
-	def test_create_data_on_use(self):
+	def test_create_data_dir(self):
 
 		shutil.rmtree('no_create_dir_data',ignore_errors=True)
 
-		p = get_pipeline(get_complete_filename('no_create_dir'),default_prefix=USE_DIR_PREFIX)
+		p = get_pipeline(get_complete_filename('create_dir'),default_prefix=USE_DIR_PREFIX)
 		p.unmark_all_tasks(recur=True)
 		p.run()
 
-		self.assertFalse(os.path.exists(get_complete_filename('no_create_dir_data')))
+		self.assertTrue(os.path.exists(get_complete_filename('create_dir_data')))
 
 	def test_simple_preamble(self):
 		p = get_pipeline(get_complete_filename('preamble1'),default_prefix=USE_FILE_PREFIX)
