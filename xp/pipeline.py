@@ -334,10 +334,13 @@ class Pipeline:
 
 		self.build_context()	
 
+		tasks_run = []
 		# run the leaf tasks - this will trigger other tasks as needed
 		for t in get_leaves(self.tasks):
 			logger.debug('running task %s' % t.name)
-			t.run(force)
+			tasks_run.extend(t.run(force))
+
+		return tasks_run
 	
 class VariableAssignment:
 	def __init__(self,varname,value,source_file,lineno):
@@ -496,6 +499,8 @@ class Task:
 
 	def run(self,force=FORCE_NONE):
 
+		tasks_run = []
+
 		if self.pipeline.is_abstract:
 			raise Exception('an abstract pipeline cannot be run: %s' % self.pipeline.abs_filename)
 
@@ -513,7 +518,7 @@ class Task:
 			dep_force = FORCE_ALL if force == FORCE_ALL else FORCE_NONE
 			logger.debug('task %s: run dependencies' % self.name)
 			for d in self._dependencies:
-				d.run(force=dep_force)
+				tasks_run.extend(d.run(force=dep_force))
 		else:
 			logger.debug('task %s: skipping dependencies, solo mode!' % self.name)
 		
@@ -533,7 +538,7 @@ class Task:
 					break
 
 		if not run_task:
-			return
+			return tasks_run
 
 		logger.debug('run task %s: dep timestamp' % self.name)
 
@@ -550,6 +555,10 @@ class Task:
 
 		# Update the marker
 		self.mark()
+
+		tasks_run.append(self)
+
+		return tasks_run
 
 class ExportBlock:
 	def __init__(self,statements,source_file,lineno):

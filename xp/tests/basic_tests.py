@@ -140,9 +140,10 @@ class BasicTestCase(unittest.TestCase):
 		os.system('touch %s' % get_complete_filename('.tasks2-task1.mark'))
 
 		# now re-run the task
-		p.get_task('task2').run()
+		tasks_run = p.get_task('task2').run()
 
 		# check to see if task2 ran again
+		self.assertEquals(tasks_run,[p.get_task('task2')])
 		self.assertTrue(os.path.exists(get_complete_filename('task2_foobar.sh')))
 		self.assertTrue(os.path.exists(get_complete_filename('task2_foobar.py')))
 
@@ -254,9 +255,10 @@ class ForceTestCase(unittest.TestCase):
 			os.remove(t3_file)
 
 		# run task 3
-		t3.run(force=FORCE_SOLO)
+		tasks_run = t3.run(force=FORCE_SOLO)
 
 		# check the output
+		self.assertEquals(tasks_run,[t3])
 		self.assertFalse(os.path.exists(t1_file))
 		self.assertFalse(os.path.exists(t2_file))
 		self.assertTrue(os.path.exists(t3_file))
@@ -296,9 +298,10 @@ class ForceTestCase(unittest.TestCase):
 		time.sleep(1)
 
 		# run task 3
-		t3.run(force=FORCE_NONE)
+		tasks_run = t3.run(force=FORCE_NONE)
 
 		# check the output
+		self.assertEquals(tasks_run,[t1,t2,t3])
 		self.assertTrue(os.path.exists(t1_file))
 		self.assertTrue(os.path.exists(t2_file))
 		self.assertTrue(os.path.exists(t3_file))

@@ -169,10 +169,10 @@ def do_run(args):
 		if t is None:
 			logger.error('task %s does not exist' % args.task_name)
 			sys.exit(-1)
-		elif t.is_marked():
-			logger.warn('task %s is already marked. Nothing done' % args.task_name)
 		else:
-			t.run(force=force_val)
+			tasks_run = t.run(force=force_val)
+			if len(tasks_run) == 0:
+				logger.warn('task %s is already marked. Nothing done' % args.task_name)
 
 def main():
 	parser = argparse.ArgumentParser('xp')
