@@ -144,14 +144,31 @@ def do_run(args):
 	parser = argparse.ArgumentParser('xp run',description='run a flex pipeline')
 	parser.add_argument('-f','--force',choices=['NONE','TOP','ALL','SOLO'],default='NONE',
 		help='force tasks to run, even if they is already marked. NONE will not force any marked tasks to run; TOP will force the named task or the top-level tasks in the pipeline to run; ALL will force all marked tasks encountered in the dependency tree to run; SOLO will force the specified task to run, but NOT any of its dependencies (regardless of their state).')
+	parser.add_argument('-T',action='store_true',help='force all top level tasks to run. Equivalent to --force=TOP')
+	parser.add_argument('-A',action='store_true',help='force all tasks to run. Equivalent to --force=ALL')
+	parser.add_argument('-S',action='store_true',help='force the specified tasks to run, but NOT any of their dependencies. Equivalent to --force=SOLO')
 	parser.add_argument('pipeline_file',help='the pipeline to run')
 	parser.add_argument('task_name',nargs='?',help='the specific task to run. If omitted, the entire pipeline will be run')
 
 	
 	args = parser.parse_args(args)
 
+	# ensure we don't have conflicting forcings
+	num_forcings = sum([args.force.upper() != 'NONE',args.T,args.A,args.S])
+	if num_forcings > 1:
+		logger.error('force status specified too many times. Forcing can only be specified once')
+		sys.exit(-1)
+
+	# figure out force value
 	force_val_lookup = {'NONE':FORCE_NONE, 'TOP':FORCE_TOP, 'ALL':FORCE_ALL, 'SOLO':FORCE_SOLO}
 	force_val = force_val_lookup[args.force.upper()]
+
+	if args.T:
+		force_val = FORCE_TOP
+	elif args.A:
+		force_val = FORCE_ALL
+	elif args.S:
+		force_val = FORCE_SOLO
 
 	if not args.task_name and force_val == FORCE_SOLO:
 		logger.error('force status SOLO can only be used when tasks have been explicitly specified')
