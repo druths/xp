@@ -1,0 +1,10 @@
+###
+In this pipeline we prep the data for analysis.
+###
+
+csv2tsv:
+	# Ditch the CSV format
+	code.sh:
+		cat sp.pop.totl_Indicator_en_csv_v2.csv | tr ',' '	' | tr -d '"' > $PLN(pop_data.tsv)
+
+

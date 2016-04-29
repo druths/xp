@@ -1,0 +1,19 @@
+use data_prep.xp as dp
+
+compute_pct_changes: dp.csv2tsv
+	###
+	For each country (column 1), pull out the population in 2014 (column 2) and 1960 (column 3)
+	###
+	code.sh:
+		tail -n +2 $PLN(dp,pop_data.tsv) | awk -F '\\t' -e '{ print \$2 "\\t" \$55 "\\t" \$6; }' > $PLN(pop_pct_change.tsv)
+
+plot_differences: compute_pct_changes
+	###
+	Plot all countries on x (original size), y (% change) into the file pop_change.png
+	###
+	code.gnuplot:
+		set term png
+		set output "$PLN(pop_change.png)"
+		plot "$PLN(pop_pct_change.tsv)" using (log(\$3)):( (\$2 - \$3)/\$3 ) with points pt 7
+
+		
