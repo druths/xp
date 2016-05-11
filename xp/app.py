@@ -22,10 +22,25 @@ import time
 
 from xp.pipeline import *
 
+from xp.blocks import registered_code_blocks
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 LOG_LEVELS = ['DEBUG','INFO','WARN','ERROR','CRITICAL']
-COMMANDS = ['tasks','unmark','mark','run']
+COMMANDS = ['tasks','unmark','mark','run','codeblock_info']
+
+def do_codeblock_info(args):
+	max_prefix_len = max([len(x) for x in registered_code_blocks.keys()])
+
+	ordered_prefixes = registered_code_blocks.keys()
+	ordered_prefixes.sort()
+
+	print 'Supported code blocks:'
+	for prefix in ordered_prefixes:
+		cb = registered_code_blocks[prefix]
+		print'\t%s%s' % (prefix.ljust(max_prefix_len+2),cb.short_help)	
+
+	print
 
 def do_info(args):
 	raise NotImplementedError
