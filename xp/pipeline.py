@@ -24,7 +24,7 @@ import os, os.path
 import subprocess
 import logging
 
-import blocks
+from blocks import registered_code_blocks, get_total_context
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -603,10 +603,10 @@ class CodeBlock:
 
 		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
-		if self.lang in LANG_FXN_LOOKUP:
-			run_template = 'blocks.%s(arg_str,context,cwd,content)'  
+		if self.lang in registered_code_blocks:
+			cb_impl = registered_code_blocks[self.lang]
 			try:
-				exec(run_template % LANG_FXN_LOOKUP[self.lang])
+				cb_impl.run(arg_str,context,cwd,content)
 			except subprocess.CalledProcessError:
 				raise BlockFailed
 		else:
@@ -993,7 +993,7 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 				# apply the function
 				ret_val = ''
 				if varname == '':
-					ret_val = subprocess.check_output(args_str,shell=True,cwd=cwd,env=blocks.get_total_context(context))
+					ret_val = subprocess.check_output(args_str,shell=True,cwd=cwd,env=get_total_context(context))
 					if ret_val[-1] == '\n':
 						ret_val = ret_val[:-1]
 
