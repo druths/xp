@@ -9,6 +9,8 @@
 
 ### Changed
 
+  * Modularized the handling of code block implementations.
+
 ### Depricated
 
 ### Removed

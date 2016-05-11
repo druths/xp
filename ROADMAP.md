@@ -2,18 +2,7 @@
 XP Roadmap
 ~~~~~~~~~~~~
 	
-v0.1
-----
-
-	* Write tutorial blog post
-
-	* Make a couple example pipelines
-
-	* Post to Reddit
-
-	* Post to Twitter
-
-v0.2
+v1.2
 ----
 	
 	* Implement fx commands: import, export, info, and dry_run 
@@ -22,11 +11,9 @@ v0.2
 		* block_type.check()
 		* fx command: check_block_support
 
-	* Modularize the code block execution code
-
 	* Add parallel task execution
 
-v0.3
+v1.3
 ----
 
 	* Add task generators. Something like this::

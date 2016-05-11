@@ -30,6 +30,9 @@ LOG_LEVELS = ['DEBUG','INFO','WARN','ERROR','CRITICAL']
 COMMANDS = ['tasks','unmark','mark','run','codeblock_info']
 
 def do_codeblock_info(args):
+	parser = argparse.ArgumentParser('xp codeblock_info',
+				description='print the availability and usage tips for codeblocks')
+
 	max_prefix_len = max([len(x) for x in registered_code_blocks.keys()])
 
 	ordered_prefixes = registered_code_blocks.keys()
