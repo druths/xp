@@ -32,18 +32,31 @@ COMMANDS = ['tasks','unmark','mark','run','codeblock_info']
 def do_codeblock_info(args):
 	parser = argparse.ArgumentParser('xp codeblock_info',
 				description='print the availability and usage tips for codeblocks')
+	parser.add_argument('code_prefix',nargs='?',help='a specific code block type to get information about')
 
-	max_prefix_len = max([len(x) for x in registered_code_blocks.keys()])
+	args = parser.parse_args(args)
 
-	ordered_prefixes = registered_code_blocks.keys()
-	ordered_prefixes.sort()
-
-	print 'Supported code blocks:'
-	for prefix in ordered_prefixes:
-		cb = registered_code_blocks[prefix]
-		print'\t%s%s' % (prefix.ljust(max_prefix_len+2),cb.short_help)	
-
-	print
+	if args.code_prefix is None:
+		max_prefix_len = max([len(x) for x in registered_code_blocks.keys()])
+	
+		ordered_prefixes = registered_code_blocks.keys()
+		ordered_prefixes.sort()
+	
+		print 'Supported code blocks:'
+		for prefix in ordered_prefixes:
+			cb = registered_code_blocks[prefix]
+			print'\t%s%s' % (prefix.ljust(max_prefix_len+2),cb.short_help)	
+	
+		print
+	else:
+		# print the info on that code prefix
+		if args.code_prefix not in registered_code_blocks:
+			print 'code prefix "%s" is unknown' % args.code_prefix
+		else:
+			print 'Code block type "%s":' % args.code_prefix
+			print
+			print registered_code_blocks[args.code_prefix].long_help
+			print
 
 def do_info(args):
 	raise NotImplementedError

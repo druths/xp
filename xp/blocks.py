@@ -110,7 +110,7 @@ def get_total_context(context):
 
 @codeblock(	block_prefix='sh',
 			short_help='run a shell script (OS-specific)',
-			long_help='run the commands in whatever the default shell on the host operating system')
+			long_help='Run the commands in whatever the default shell on the host operating system.')
 def run_shell(arg_str,context,cwd,content):
 	"""
 	Raises a CalledProcessError if this fails.
@@ -128,7 +128,7 @@ def run_shell(arg_str,context,cwd,content):
 
 @codeblock(	block_prefix='py',
 			short_help='run python code',
-			long_help='run the commands in whatever the default python VM is on the host system')
+			long_help='Run the commands in whatever the default python VM is on the host system.')
 def run_python(arg_str,context,cwd,content):
 
 	# write python code to a tmp file
@@ -148,7 +148,7 @@ def run_python(arg_str,context,cwd,content):
 
 @codeblock(	block_prefix='gnuplot',
 			short_help='run a gnuplot script',
-			long_help='run the commands in GNUPlot')
+			long_help='Run the commands in GNUPlot.')
 def run_gnuplot(arg_str,context,cwd,content):
 	
 	# write gnuplot code to a tmp file
@@ -169,7 +169,7 @@ def run_gnuplot(arg_str,context,cwd,content):
 
 @codeblock(	block_prefix='awk',
 			short_help='run an AWK script',
-			long_help='run an awk script. Note that in order to read/write particular files, use the BEGIN preamble.')
+			long_help='Run an awk script. Note that in order to read/write particular files, use the BEGIN preamble.')
 def run_awk(arg_str,context,cwd,content):
 	
 	# write awk code to a tmp file
@@ -190,7 +190,7 @@ def run_awk(arg_str,context,cwd,content):
 
 @codeblock(	block_prefix='test',
 			short_help='a codeblock for internal testing',
-			long_help='this codeblock will write the content to the file named in the argument string')
+			long_help='This codeblock will write the content to the file named in the argument string.')
 def run_test(arg_str,context,cwd,content):
 	
 	# create all fils in the arg str
