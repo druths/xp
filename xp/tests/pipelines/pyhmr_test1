@@ -1,0 +1,30 @@
+
+test1:
+	export:
+		PYHMR_STREAMING_API=blargh
+		PYHMR_INPUT=foo
+		PYHMR_OUTPUT=bar
+		PYHMR_TEST_CMD=echo "hello world this is a test hello hello test"
+		PYHMR_TEST_OUTPUT=pyhmr_test1.out
+
+	code.pyhmr:
+
+		def map(stream):
+			for line in stream:
+				words = line.strip().split()
+				for w in words:
+					print '%s\\t1' % w
+
+		def reduce(stream):
+			word_count = {}
+			for line in stream:
+				word,count = line.strip().split('\\t')
+				count = int(count)
+		
+				word_count[word] = word_count.get(word,0) + count
+
+			for word,count in word_count.items():
+				print '%s\\t%d' % (word,count)
+
+			# done
+
