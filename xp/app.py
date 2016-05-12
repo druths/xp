@@ -63,7 +63,7 @@ def do_codeblock_info(args):
 			if len(env_vars) > 0:
 				print 'Supported environment variables:'
 				max_var_length = max([len(x) for x in env_vars.keys()])
-				for var,info in env_vars:
+				for var,info in env_vars.items():
 					print '  - %s%s' % (var.ljust(max_var_length+2),info)
 	
 				print

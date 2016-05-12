@@ -22,7 +22,7 @@ import os, os.path
 # check for gnuplot
 gnuplot_installed = os.system('gnuplot -V') == 0
 
-__all__ = ['BlockArgStringTestCase','AwkTestCase']
+__all__ = ['BlockArgStringTestCase','AwkTestCase','PYHMRTestCase']
 
 if gnuplot_installed:
 	__all__.append('GnuplotTestCase')
@@ -76,4 +76,23 @@ class GnuplotTestCase(unittest.TestCase):
 
 		os.remove(get_complete_filename('gpl_basic1_output1.png'))
 		os.remove(get_complete_filename('output2.png'))
+
+class PYHMRTestCase(unittest.TestCase):
+
+	def test_basic1(self):
+		p = get_pipeline(get_complete_filename('pyhmr_test1'),
+						default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks()
+		p.run()
+
+		fname = get_complete_filename('pyhmr_test1.out')
+
+		self.assertTrue(os.path.exists(fname))
+		contents = open(fname,'r').read()
+
+		self.assertTrue('test\t2' in contents)
+		self.assertTrue('hello\t3' in contents)
+
+		os.remove(fname)
+
 
