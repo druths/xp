@@ -53,10 +53,20 @@ def do_codeblock_info(args):
 		if args.code_prefix not in registered_code_blocks:
 			print 'code prefix "%s" is unknown' % args.code_prefix
 		else:
-			print 'Code block type "%s":' % args.code_prefix
+			# TODO: Make this pretty format.  Currently no margins are enforced,
+			# so things will wrap and be ugly.
 			print
 			print registered_code_blocks[args.code_prefix].long_help
 			print
+
+			env_vars = registered_code_blocks[args.code_prefix].env_vars
+			if len(env_vars) > 0:
+				print 'Supported environment variables:'
+				max_var_length = max([len(x) for x in env_vars.keys()])
+				for var,info in env_vars:
+					print '  - %s%s' % (var.ljust(max_var_length+2),info)
+	
+				print
 
 def do_info(args):
 	raise NotImplementedError
