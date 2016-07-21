@@ -928,7 +928,7 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 	ParseException is raised if syntax is bad.
 	UnknownVariableException is raised if variables or functions can't be resolved.
 	"""
-	
+
 	cpos = 0
 	
 	while cpos < len(x):
@@ -1036,13 +1036,14 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 					raise UnknownVariableException(source_file,lineno,'variable %s does not exist' % varname)
 
 				replacement = context[varname]	
-	
 				# make the replacement
 				pre_var = x[:cpos]
 				post_var = x[(cpos+1+len(varname)):]
 				x = pre_var + replacement + post_var
 				cpos = cpos+1+len(replacement)
-		
+
+				if ')' in post_var:
+					return expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=True)
 		elif nested and x[cpos] == ')':
 			# We just found the end of a function (which we're nested inside of)
 			return x,cpos
