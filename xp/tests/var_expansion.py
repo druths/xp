@@ -65,6 +65,9 @@ class InnerVarExpansionTestCase(unittest.TestCase):
 		exval = expand_variables('touch $PLN($var1.txt)',context,cwd,None,None,-1)
 		self.assertEquals(exval,'touch /foo/bar_hello.txt')
 
+		exval = expand_variables('touch $PLN(${var1}.txt)',context,cwd,None,None,-1)
+		self.assertEquals(exval,'touch /foo/bar_hello.txt')
+
 	def test_shell_fxn1(self):
 		context = {'var1':'hello'}
 		cwd = '.'
