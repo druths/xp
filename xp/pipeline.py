@@ -31,7 +31,7 @@ logger = logging.getLogger(os.path.basename(__file__))
 # Constants
 DEFAULT_PIPELINE_FILE_SUFFIX = 'xp'
 
-PIPELINE_PREFIX_VARNAME = 'FLEX_PLN_PREFIX'
+PIPELINE_PREFIX_VARNAME = 'XP_PLN_PREFIX'
 
 FILE_PREFIX = 'file'
 DIR_PREFIX = 'dir'
