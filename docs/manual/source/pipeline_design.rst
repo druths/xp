@@ -381,9 +381,9 @@ handled and resolved.
 Syntax
 ######
 
-Much like in bash and make, variables and functions are references using
-``$<name>`` or ``${<name>}``, where the name is the name of the variable or
-function.  Functions have the additional requirement of parentheses which
+Much like in bash and make, xp supports variable and function references
+using ``$<name>`` or ``${<name>}``, where the name is the name of the variable
+or function.  Functions have the additional requirement of parentheses which
 contain the input arguments: ``$<fxn_name>(<args>)`` or
 ``${<fxn_name>}(<args>)``.
 
@@ -391,6 +391,23 @@ Variable and function names can consist of one or more alphanumeric or
 underscore characters. The second reference form using curly braces allows the
 use of variables in places where there is no whitespace:
 ``foobar_${iternum}.txt``.
+
+*Referencing variables in other pipelines.* In addition to plain-vanilla
+variables, xp also supports referencing variables defined in other pipelines.
+A pipeline has access to the variables declared in any other pipeline declared
+with the ``use <pipeline>`` directive.  These pipeline-referenced variables
+take the form ``${<pln_name>.<name>}`` where ``<pln_name>`` is the name of the
+pipeline and ``<name>`` is the name of the variable.  Here's an example:
+
+::
+	use db_setup as db
+
+	set DB_INFO=mysql://${db.USERNAME}:${db.PASSWD}@${db.HOST}/${db.DB_NAME}
+
+	...
+
+In this example, the database information, defined in the ``db_setup``, is
+accessed in anothe pipeline.
 
 ###################
 Available functions
