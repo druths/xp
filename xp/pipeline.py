@@ -165,7 +165,7 @@ class Pipeline:
 		self.initialize()
 
 	def get_used_pipelines(self):
-			return dict(self.used_pipelines)	
+		return dict(self.used_pipelines)	
 
 	def get_prefix(self):
 		return self.prefix_stmt.get_prefix(self.abs_filename)
@@ -915,7 +915,7 @@ def read_block_content(lines,lineno,indent_seq):
 	il = len(inner_indent_seq)
 	return last_lineno,map(lambda x: x[il:].rstrip(),content_lines),content_linenos
 
-variable_pattern = re.compile('([\w\d_]+|\{[\w\d_]+?\})')
+variable_pattern = re.compile('([\w\d_]+)|(\{([\w\d]+\.)?[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']
 SUPPORTED_ESCAPABLE_CHARACTERS = ['$','\\']
 
@@ -928,7 +928,7 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 	ParseException is raised if syntax is bad.
 	UnknownVariableException is raised if variables or functions can't be resolved.
 	"""
-
+	
 	cpos = 0
 	
 	while cpos < len(x):
@@ -962,14 +962,19 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 				else:
 					raise ParseException(source_file,lineno,'invalid variable reference')
 			else:
-				varname = m.group(1)
-	
-			# remove curly braces if needed
-			if varname.startswith('{'):
-				varname = varname[1:-1]
+				varname = None
 				
-				# remove the curlies from the string x
-				x = x[:(cpos+1)] + varname + x[(cpos+len(varname)+3):]
+				# this is a curly-brace-delimited variable
+				if m.group(1) is None:
+					varname = m.group(2)
+
+					# remove curly braces
+					varname = varname[1:-1]
+						
+					# remove the curlies from the string x
+					x = x[:(cpos+1)] + varname + x[(cpos+len(varname)+3):]
+				else: # not delimited by curly braces
+					varname = m.group(1)
 
 			# if this variable reference is actually a function
 			fxn_paren_pos = cpos+1+len(varname)
@@ -1032,18 +1037,27 @@ def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
 			else:
 				replacement = ''
 
-				if varname not in context:
+				# figure out which context to use
+				var_context = context
+				if '.' in varname:
+					pln_name, varname = varname.split('.')
+
+					if pln_name not in pipelines:
+						raise UnknownVariableException(source_file,lineno,'pipeline %s is unknown' % pln_name)
+					else:
+						var_context = pipelines[pln_name].get_context()
+
+				if varname not in var_context:
 					raise UnknownVariableException(source_file,lineno,'variable %s does not exist' % varname)
 
-				replacement = context[varname]	
+				replacement = var_context[varname]	
+	
 				# make the replacement
 				pre_var = x[:cpos]
 				post_var = x[(cpos+1+len(varname)):]
 				x = pre_var + replacement + post_var
 				cpos = cpos+1+len(replacement)
-
-				if ')' in post_var:
-					return expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=True)
+		
 		elif nested and x[cpos] == ')':
 			# We just found the end of a function (which we're nested inside of)
 			return x,cpos

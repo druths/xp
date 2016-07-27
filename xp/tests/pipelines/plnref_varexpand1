@@ -1,0 +1,5 @@
+use varexpand1 as ve1
+
+VAR1=${ve1.VAR1}
+VAR2=${ve1.VAR2}_xyz
+

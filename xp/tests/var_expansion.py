@@ -181,3 +181,18 @@ class VarExpansionTestCase(unittest.TestCase):
 		shutil.rmtree(get_complete_filename('sdir_foo2'))
 
 		p.unmark_all_tasks(recur=True)	
+
+	def test_plnref_varexpand1(self):
+		"""
+		This test case checks:
+
+			- basic variable expansion
+			- basic pipeline filename expansion
+			- nested pipeline filename expansion
+		"""
+		p = get_pipeline(get_complete_filename('plnref_varexpand1'),default_prefix=USE_FILE_PREFIX)
+		context = p.get_context()
+
+		self.assertTrue(context['VAR1'],'test')
+		self.assertTrue(context['VAR2'],'varexpand1_test_xyz')
+
