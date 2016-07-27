@@ -407,7 +407,7 @@ pipeline and ``<name>`` is the name of the variable.  For example::
 	...
 
 In this example, the database information, defined in the ``db_setup``, is
-accessed in anothe pipeline.
+accessed in another pipeline.
 
 ###################
 Available functions
