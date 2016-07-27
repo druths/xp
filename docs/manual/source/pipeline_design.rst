@@ -338,7 +338,8 @@ variables, ``in_dir``, ``tmp_file``, and ``out_fname``.  Notice that it also
 references the shell variable ``PATH`` and that, in order to make this reference,
 a backslash is used to escape the ``$`` character.
 
-**Configuring the execution environment.** All xp variables are exported into the shell environment in which the execution system will run.  For example::
+**Configuring the execution environment.** All xp variables are exported into
+the shell environment in which the execution system will run.  For example::
 
 	PYTHONPATH=.	
 
@@ -397,9 +398,8 @@ variables, xp also supports referencing variables defined in other pipelines.
 A pipeline has access to the variables declared in any other pipeline declared
 with the ``use <pipeline>`` directive.  These pipeline-referenced variables
 take the form ``${<pln_name>.<name>}`` where ``<pln_name>`` is the name of the
-pipeline and ``<name>`` is the name of the variable.  Here's an example:
+pipeline and ``<name>`` is the name of the variable.  For example::
 
-::
 	use db_setup as db
 
 	set DB_INFO=mysql://${db.USERNAME}:${db.PASSWD}@${db.HOST}/${db.DB_NAME}
