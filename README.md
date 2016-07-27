@@ -189,13 +189,15 @@ alpha value.
 ```
 # Pipeline: cluster_pln
 
+CLUSTERS_FNAME=clusters.tsv
+
 cluster_rows: extract_columns
 	code.sh:
-		./cluster.sh --alpha $ALPHA xdata2.tsv > $PLN(clusters.tsv)
+		./cluster.sh --alpha $ALPHA xdata2.tsv > $PLN($CLUSTERS_FNAME)
 
 plot_clusters: cluster_rows
 	code.gnuplot:
-		plot "$PLN(clusters.tsv)" using 1:2 title 'Cluster quality at alpha=$ALPHA'
+		plot "$PLN($CLUSTERS_FNAME)" using 1:2 title 'Cluster quality at alpha=$ALPHA'
 ```
 
 We can extend this pipeline to retain the same workflow, but use different values:
@@ -242,7 +244,7 @@ build_lda: cdata.cluster_rows
 		LDA_CLASSIFIER=lda_runner
 
 	code.sh:
-		${LDA_CLASSIFIER} -input $PLN(cdata,clusters.tsv) -output $PLN(lda_model.json)
+		${LDA_CLASSIFIER} -input $PLN(cdata, ${cdata.CLUSTERS_FNAME}) -output $PLN(lda_model.json)
 
 label_articles: build_lda
 	export:
@@ -253,7 +255,9 @@ label_articles: build_lda
 
 In the example above, notice how the task `build_lda` both depends on a task
 from the `cluster_a2` pipeline and *also* uses data from that pipeline's
-namespace, `$PLN(cdata,clusters.tsv)`.
+namespace, `$PLN(cdata, ${cdata.CLUSTERS_FNAME})`, where `${cdata.CLUSTERS_FNAME}`
+references the `CLUSTERS_FNAME` variable inherited by `cluster_a2` from
+`cluster_pln`.
 
 Of course, we might want to try multiple classifiers on the same source data,
 so we can create other pipelines that use `cluster_a2`, shown next.
@@ -267,7 +271,7 @@ NEWS_ARTICLES=articles/*.gz
 
 build_crf_model: cdata.cluster_rows
 	code.sh:
-		/opt/bin/build_crf -data $PLN(cdata,clusters.tsv) -output $PLN(crf_model.json)
+		/opt/bin/build_crf -data $PLN(cdata, ${cdata.CLUSTERS_FNAME}) -output $PLN(crf_model.json)
 
 label_articles: build_crf_model
 	code.py:
