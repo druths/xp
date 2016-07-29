@@ -204,7 +204,12 @@ class Pipeline:
 						self.used_pipelines[k] = v	
 			elif isinstance(stmt,UseStatement):
 				filename = os.path.join(os.path.dirname(self.abs_filename),stmt.filename)
-				used_pipeline = get_pipeline(filename)
+				
+				try:
+					used_pipeline = get_pipeline('%s.xp' % filename)
+				except PipelineNotFound:
+					used_pipeline = get_pipeline(filename)
+
 				logger.debug('adding pipeline %s with alias %s' % (used_pipeline.name,stmt.alias))
 				self.used_pipelines[stmt.alias] = used_pipeline
 			elif isinstance(stmt,PrefixStatement):
