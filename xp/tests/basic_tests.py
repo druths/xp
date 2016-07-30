@@ -233,6 +233,14 @@ class BasicTestCase(unittest.TestCase):
 
 		p.unmark_all_tasks(recur=True)
 
+	def test_run_use2(self):
+		p = get_pipeline(get_complete_filename('use2'),default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		
+		p.run()
+
+		p.unmark_all_tasks(recur=True)
+
 class ForceTestCase(unittest.TestCase):
 
 	def test_force_solo(self):
