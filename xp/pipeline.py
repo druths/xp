@@ -173,6 +173,25 @@ class Pipeline:
 	def abs_path(self):
 		return os.path.dirname(self.abs_filename)
 
+	def get_stmt_from_lineno(self,lineno):
+		# adjust lineno to internal rep (internal linenos are indexed from zero)
+		lineno -= 1
+
+		# check the preamble
+		for stmt in self.preamble:
+			if stmt.lineno == lineno:
+				return stmt
+
+		# check the tasks
+		for task in self.tasks:
+			start_lineno = task.lineno
+			end_lineno = task.get_final_lineno()
+
+			if start_lineno <= lineno <= end_lineno:
+				return task
+
+		return None
+
 	def initialize(self):
 		
 		# go through and deal with the extend and use statements
@@ -459,6 +478,9 @@ class Task:
 
 		self._dependencies = []
 
+	def get_final_lineno(self):
+		return max([b.get_final_lineno() for b in self.blocks])	
+
 	def copy(self):
 		blocks = map(lambda x: x.copy(), self.blocks)
 		return Task(self.name,self.dep_names,blocks,self.source_file,self.lineno)
@@ -582,6 +604,12 @@ class ExportBlock:
 		for s in self.statements:
 			s.update_context(context,cwd,pipelines)
 
+	def get_final_lineno(self):
+		if len(self.statements) == 0:
+			return self.lineno
+		else:
+			return self.statements[-1].lineno
+
 class CodeBlock:
 	def __init__(self,lang,arg_str,content,source_file,lineno):
 		self.lang = lang
@@ -590,6 +618,10 @@ class CodeBlock:
 		self.source_file = source_file
 		self.lineno = lineno
 
+	def get_final_lineno(self):
+		# num lines
+		return self.lineno + len(self.content)
+	
 	def copy(self):
 		return CodeBlock(self.lang,self.arg_str,self.content,self.source_file,self.lineno)
 
