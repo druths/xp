@@ -469,21 +469,25 @@ class UseStatement:
 			self.alias = filename
 
 class Task:
-	def __init__(self,name,dep_names,blocks,source_file,lineno):
+	def __init__(self,name,dep_names,properties,blocks,source_file,lineno):
 		self.name = name
 		self.dep_names = dep_names
+		self._properties = properties
 		self.blocks = blocks
 		self.source_file = source_file
 		self.lineno = lineno
 
 		self._dependencies = []
 
+	def properties(self):
+		return dict(self._properties)
+
 	def get_final_lineno(self):
 		return max([b.get_final_lineno() for b in self.blocks])	
 
 	def copy(self):
 		blocks = map(lambda x: x.copy(), self.blocks)
-		return Task(self.name,self.dep_names,blocks,self.source_file,self.lineno)
+		return Task(self.name,self.dep_names,dict(self._properties),blocks,self.source_file,self.lineno)
 
 	def set_pipeline(self,pipeline):
 		self.pipeline = pipeline
@@ -817,8 +821,11 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 	valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
 	var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
 	delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
-	code_pattern = None #re.compile('^\tcode\.(\w+):(.*)$')
-	export_pattern = None #re.compile('^\texport:(.*)$')
+	
+	# these patterns need to be initialized once we know the indentation sequence
+	code_pattern = None 
+	export_pattern = None 
+	property_pattern = None
 
 	start_lineno = lineno
 
@@ -838,7 +845,8 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 
 	lineno += 1
 
-	# now parse blocks
+	# now parse blocks and properties
+	task_props = {}
 	blocks = []
 	in_task = True	
 	in_comment_block = False
@@ -852,6 +860,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 		logger.debug('indent_seq len = %d' % len(indent_seq))
 		code_pattern = re.compile('^%scode\.(\w+):(.*)$' % indent_seq)
 		export_pattern = re.compile('^%sexport:(.*)$' % indent_seq)
+		property_pattern = re.compile('^%s@([^\s]+)\s+(.*)$' % indent_seq)
 	else:
 		in_task = False
 
@@ -868,6 +877,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 
 		mc = code_pattern.match(cur_line)
 		me = export_pattern.match(cur_line)
+		mp = property_pattern.match(cur_line)
 
 		if cur_line.startswith('%s###' % indent_seq):
 			# we're starting a multi-line comment block
@@ -875,7 +885,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 			lineno += 1
 		if cur_line.startswith('%s#' % indent_seq) or len(cur_line.strip()) == 0:
 			lineno += 1
-		elif mc:
+		elif mc: ### code block starts here
 			lang = mc.group(1)
 			arg_str = mc.group(2)
 			logger.debug('found code block at line %d' % lineno)
@@ -883,7 +893,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 			lineno,content,content_linenos = read_block_content(lines,lineno+1,indent_seq)
 
 			blocks.append(CodeBlock(lang,arg_str,content,pipeline_file,block_lineno))
-		elif me:
+		elif me: ### export block starts here
 			arg_str = me.group(1).strip()
 			logger.debug('found export block at line %d' % lineno)
 			export_lineno = lineno
@@ -913,10 +923,18 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 
 			blocks.append(ExportBlock(statements,pipeline_file,export_lineno))
 			lineno = new_lineno
+		elif mp: ### task property line
+			logger.debug('found task property at line %d' % lineno)
+			prop_name = mp.group(1)
+			prop_value = mp.group(2)
+			logger.debug('property "%s" = %s' % (prop_name,prop_value))
+			task_props[prop_name] = prop_value
+
+			lineno += 1
 		else:
 			in_task = False	
 
-	return lineno,Task(task_name,dependencies,blocks,pipeline_file,start_lineno)
+	return lineno,Task(task_name,dependencies,task_props,blocks,pipeline_file,start_lineno)
 
 def read_block_content(lines,lineno,indent_seq):
 	"""
