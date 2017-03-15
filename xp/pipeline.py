@@ -24,7 +24,8 @@ import os, os.path
 import subprocess
 import logging
 
-from blocks import registered_code_blocks, get_total_context
+from xp.kernels.base import get_total_context
+from xp.kernel_loader import KernelLoader
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -38,12 +39,6 @@ DIR_PREFIX = 'dir'
 
 USE_FILE_PREFIX = (FILE_PREFIX,None)
 USE_DIR_PREFIX = (DIR_PREFIX,None)
-
-LANG_FXN_LOOKUP = {	'sh':'run_shell', 
-					'py':'run_python',
-					'gnuplot':'run_gnuplot',
-					'test':'run_test',
-					'awk':'run_awk'}
 
 NO_INDENT = ''
 
@@ -654,14 +649,15 @@ class CodeBlock:
 
 		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
-		if self.lang in registered_code_blocks:
-			cb_impl = registered_code_blocks[self.lang]
+		kloader = KernelLoader.singleton()
+		if self.lang in kloader:
+			kernel = kloader.get_kernel(self.lang) 
 			try:
-				cb_impl.run(arg_str,context,cwd,content)
+				kernel.run(arg_str,context,cwd,content)
 			except subprocess.CalledProcessError:
 				raise BlockFailed
 		else:
-			raise BlockFailed, 'unknown block type: %s' % self.lang
+			raise BlockFailed, 'unknown language suffix: %s' % self.lang
 
 class PipelineNotFound(Exception):
 	def __init__(self,pipeline_file):

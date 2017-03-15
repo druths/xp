@@ -24,6 +24,8 @@ from xp.pipeline import *
 
 from xp.blocks import registered_code_blocks
 
+from xp.config import config_info, initialize_config_info
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 LOG_LEVELS = ['DEBUG','INFO','WARN','ERROR','CRITICAL']
@@ -235,6 +237,7 @@ def do_run(args):
 def main():
 	parser = argparse.ArgumentParser('xp')
 	parser.add_argument('-l','--log_level',choices=LOG_LEVELS,default='WARN')
+	parser.add_argument('-C','--config_file',default=None,help='specify a configuration file to use')
 	parser.add_argument('command',choices=COMMANDS)
 	parser.add_argument('cmd_args',nargs=argparse.REMAINDER)
 
@@ -243,6 +246,9 @@ def main():
 	# configure the logger
 	log_level = eval('logging.%s' % args.log_level)
 	logging.basicConfig(level=log_level,format='%(levelname)s: %(message)s')
+
+	# load the configuration
+	initialize_config_info(args.config_file)
 
 	# run the command
 	logger.debug('running command: %s' % args.command)

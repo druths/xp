@@ -11,14 +11,19 @@
   * Support for making unmarkable tasks
   * Added support for task-level properties
   * Added support for simple tasks (tasks with a language suffix and a single block)
+  * Added support for a configuration file
+  * Added support for pluggable kernels
 
 ### Changed
 
   * Modularized the handling of code block implementations.
+  * Reimplemented entire backend execution system using class-based Kernels.
 
 ### Depricated
 
 ### Removed
+
+	* CodeImpl class and all related code is gone (replaced by xp.kernels.base et al.)
 
 ### Fixed
 
