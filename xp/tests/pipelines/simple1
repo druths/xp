@@ -1,0 +1,3 @@
+
+simple_task.sh:
+	touch simple1.txt

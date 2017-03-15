@@ -91,9 +91,8 @@ extract_columns: download_data
 		for data in reader(open('xdata.tsv','r'),delimiter='\t'):
 			fout.write('%s\t%s\n' % (data[0],data[1][1:-1])
 	
-cluster_rows: extract_columns
-	code.sh:
-		./cluster.sh --alpha $ALPHA xdata2.tsv > clusters.tsv
+cluster_rows.sh: extract_columns
+	./cluster.sh --alpha $ALPHA xdata2.tsv > clusters.tsv
 
 plot_clusters: cluster_rows
 	code.gnuplot:
@@ -114,11 +113,11 @@ If you choose to run a task which has unmarked dependencies, these will be run
 before the task itself is run - in this way, an entire workflow can be run
 using a single command.
 
-A task contains *blocks* which describe the actual computational steps being
-taken. As is seen in the example above, blocks can contain code for various
-different languages - making it possible to stitch together workflows that
-involve different languages. A single task can even contain multiple blocks for
-the same or different languages.
+A task contains one or more *blocks* which describe the actual computational
+steps being taken. As is seen in the example above, blocks can contain code for
+various different languages - making it possible to stitch together workflows
+that involve different languages. A single task can even contain multiple
+blocks for the same or different languages.
 
 Currently, xp supports four block types:
 
@@ -137,6 +136,12 @@ system. To customize the executable used, environment variables can be set
 
 Future releases will support additional languages natively and also provide a
 plugin mechanism for adding new block types. 
+
+Notice in the example above that the task `cluster_rows` places a language
+suffix right after the task name.  This is called a simple task: it consists of
+exactly one block, written in the language of the language suffix, which
+follows the task definition line directly. This basically is a useful shortcut
+for tasks which contain only one block.
 
 Once a pipeline has been written, it can be run using the xp command-line tool.
 
@@ -273,8 +278,7 @@ build_crf_model: cdata.cluster_rows
 	code.sh:
 		/opt/bin/build_crf -data $PLN(cdata, ${cdata.CLUSTERS_FNAME}) -output $PLN(crf_model.json)
 
-label_articles: build_crf_model
-	code.py:
+label_articles.py: build_crf_model
 		import crf_model
 
 		model = crf_model.load_model('$PLN(crf_model.json)')

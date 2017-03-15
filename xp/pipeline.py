@@ -45,6 +45,8 @@ LANG_FXN_LOOKUP = {	'sh':'run_shell',
 					'test':'run_test',
 					'awk':'run_awk'}
 
+NO_INDENT = ''
+
 # Values for the force argument in run(...) methods
 FORCE_NONE = 'dont_force'
 FORCE_TOP = 'force_top'
@@ -692,6 +694,7 @@ class UnknownVariableException(Exception):
 
 CONFIG_VAR_PATTERN = '\w[\w\d_]*(\.\w[\w\d_]*)*'
 VAR_PATTERN = '\w[\w\d_]*'
+LANG_SUFFIX_PATTERN = '\w+'
 FILE_PATTERN = '.+?'
 
 def parse_pipeline(pipeline_file,default_prefix):
@@ -764,7 +767,7 @@ def parse_pipeline(pipeline_file,default_prefix):
 			lineno += 1
 			
 	# read the tasks
-	task_pattern = re.compile('^(\*?)(%s)\s*:(.*)$' % VAR_PATTERN)
+	task_pattern = re.compile('^(\*?)(%s)(\.%s)?\s*:(.*)$' % (VAR_PATTERN,LANG_SUFFIX_PATTERN))
 	tasks = []
 	in_comment_block = False
 
@@ -785,11 +788,18 @@ def parse_pipeline(pipeline_file,default_prefix):
 			if m:
 				is_markable = m.group(1) == ''
 				task_name = m.group(2)
-				dep_str = m.group(3)
+				lang_suffix = m.group(3)
+				dep_str = m.group(4)
 
-				logger.debug('parsing task: %s' % task_name)
+				# drop the leading period from the language suffix, if it exists
+				if lang_suffix != None:
+					lang_suffix = lang_suffix[1:]
+				else:
+					lang_suffix = ''
 
-				lineno,task = parse_task(task_name,is_markable,dep_str,lines,pipeline_file,lineno)
+				logger.debug('parsing task: %s (LANG=%s)' % (task_name,lang_suffix))
+
+				lineno,task = parse_task(task_name,is_markable,lang_suffix,dep_str,lines,pipeline_file,lineno)
 
 				tasks.append(task)
 			else:
@@ -815,31 +825,29 @@ def find_indentation_match(lines,lineno,pattern):
 	# if we got here, we ran out of lines
 	return None
 
-def parse_task(task_name,is_markable,dep_str,lines,pipeline_file,lineno):
+def parse_task(task_name,is_markable,lang_suffix,dep_str,lines,pipeline_file,lineno):
 	"""
 	Parse the task.
 
+	task_name is the name of the task
+	is_markable is False if the task cannot be marked by running it
+	lang_suffix is the suffix given with the task. For multi-block tasks, this will be
+	  the empty string.  For simple tasks, this will be a suffix resolving to one of 
+	  the supported code block types.
+	dep_str is the dependency string on the task definition line
 	lineno is the line number where the task definition starts - on which the
 	task_name and dependencies string appears.
 
 	Raise exception if the task was invalid otherwise, 
 	return (next_lineno,Task)
 	"""
-	indention_pattern = re.compile('^(\s+)[^\s]')
-	live_deps_string = re.compile('^([^#]*)')
-	valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
-	var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
-	delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
-	
-	# these patterns need to be initialized once we know the indentation sequence
-	code_pattern = None 
-	export_pattern = None 
-	property_pattern = None
 
 	start_lineno = lineno
 
 	####
 	# parse the dependency list
+	live_deps_string = re.compile('^([^#]*)')
+	valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
 
 	# drop any comment end part
 	m = live_deps_string.match(dep_str)
@@ -854,7 +862,38 @@ def parse_task(task_name,is_markable,dep_str,lines,pipeline_file,lineno):
 
 	lineno += 1
 
-	# now parse blocks and properties
+	# prepare to load the blocks
+	task_props = {}
+	blocks = []
+
+	# if we have a lang suffix, load the implicit block
+	if lang_suffix != '':
+		logger.debug('loading a simple task')
+		
+		block_lineno = lineno
+		lineno,content,content_linenos = read_block_content(lines,lineno,NO_INDENT)
+		
+		blocks.append(CodeBlock(lang_suffix,'',content,pipeline_file,block_lineno))
+	else:
+		# otherwise, load all the contents
+		lineno,task_props,blocks = read_task_contents(lines,pipeline_file,lineno)
+
+	return lineno,Task(task_name,is_markable,dependencies,task_props,blocks,pipeline_file,start_lineno)
+
+def read_task_contents(lines,pipeline_file,lineno):
+	#####
+	# setup the patterns for parsing the task contents
+	indention_pattern = re.compile('^(\s+)[^\s]')
+	var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
+	delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
+	
+	# these patterns need to be initialized once we know the indentation sequence
+	code_pattern = None 
+	export_pattern = None 
+	property_pattern = None
+
+	#####
+	# load the content
 	task_props = {}
 	blocks = []
 	in_task = True	
@@ -943,7 +982,8 @@ def parse_task(task_name,is_markable,dep_str,lines,pipeline_file,lineno):
 		else:
 			in_task = False	
 
-	return lineno,Task(task_name,is_markable,dependencies,task_props,blocks,pipeline_file,start_lineno)
+	return lineno,task_props,blocks
+
 
 def read_block_content(lines,lineno,indent_seq):
 	"""

@@ -10,6 +10,7 @@
   * Support for omitting the .xp extension when using pipelines (Issue #18)
   * Support for making unmarkable tasks
   * Added support for task-level properties
+  * Added support for simple tasks (tasks with a language suffix and a single block)
 
 ### Changed
 

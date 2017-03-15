@@ -586,3 +586,15 @@ class UnmarkableTestCase(unittest.TestCase):
 		p.run()
 		self.assertTrue(os.path.exists(unmarked_file))
 		os.remove(unmarked_file)
+
+class SimpleTaskTestCase(unittest.TestCase):
+	
+	def test_simple1(self):
+		p = get_pipeline(get_complete_filename('simple1'),
+						 default_prefix=USE_FILE_PREFIX)
+		p.unmark_all_tasks(recur=True)
+		p.run()
+
+		out_file = get_complete_filename('simple1.txt')
+		self.assertTrue(os.path.exists(out_file))
+		os.remove(out_file)
