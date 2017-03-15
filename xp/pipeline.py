@@ -469,8 +469,9 @@ class UseStatement:
 			self.alias = filename
 
 class Task:
-	def __init__(self,name,dep_names,properties,blocks,source_file,lineno):
+	def __init__(self,name,is_markable,dep_names,properties,blocks,source_file,lineno):
 		self.name = name
+		self._is_markable = is_markable
 		self.dep_names = dep_names
 		self._properties = properties
 		self.blocks = blocks
@@ -487,7 +488,7 @@ class Task:
 
 	def copy(self):
 		blocks = map(lambda x: x.copy(), self.blocks)
-		return Task(self.name,self.dep_names,dict(self._properties),blocks,self.source_file,self.lineno)
+		return Task(self.name,self._is_markable,self.dep_names,dict(self._properties),blocks,self.source_file,self.lineno)
 
 	def set_pipeline(self,pipeline):
 		self.pipeline = pipeline
@@ -500,6 +501,9 @@ class Task:
 
 	def add_dependency(self,task):
 		self._dependencies.append(task)
+
+	def is_markable(self):
+		return self._is_markable
 
 	def mark_file(self):
 		return os.path.join(self.pipeline.abs_path(),'.%s-%s.mark' % (self.pipeline.name,self.name))
@@ -519,6 +523,10 @@ class Task:
 		fh.close()
 
 	def is_marked(self):
+		# if it's unmarkable, ignore any mark file
+		if not self._is_markable:
+			return False
+
 		return os.path.exists(self.mark_file())
 
 	def mark_timestamp(self):
@@ -756,7 +764,7 @@ def parse_pipeline(pipeline_file,default_prefix):
 			lineno += 1
 			
 	# read the tasks
-	task_pattern = re.compile('^(%s)\s*:(.*)$' % VAR_PATTERN)
+	task_pattern = re.compile('^(\*?)(%s)\s*:(.*)$' % VAR_PATTERN)
 	tasks = []
 	in_comment_block = False
 
@@ -775,12 +783,13 @@ def parse_pipeline(pipeline_file,default_prefix):
 		else:
 			m = task_pattern.match(cur_line)
 			if m:
-				task_name = m.group(1)
-				dep_str = m.group(2)
+				is_markable = m.group(1) == ''
+				task_name = m.group(2)
+				dep_str = m.group(3)
 
 				logger.debug('parsing task: %s' % task_name)
 
-				lineno,task = parse_task(task_name,dep_str,lines,pipeline_file,lineno)
+				lineno,task = parse_task(task_name,is_markable,dep_str,lines,pipeline_file,lineno)
 
 				tasks.append(task)
 			else:
@@ -806,7 +815,7 @@ def find_indentation_match(lines,lineno,pattern):
 	# if we got here, we ran out of lines
 	return None
 
-def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
+def parse_task(task_name,is_markable,dep_str,lines,pipeline_file,lineno):
 	"""
 	Parse the task.
 
@@ -934,7 +943,7 @@ def parse_task(task_name,dep_str,lines,pipeline_file,lineno):
 		else:
 			in_task = False	
 
-	return lineno,Task(task_name,dependencies,task_props,blocks,pipeline_file,start_lineno)
+	return lineno,Task(task_name,is_markable,dependencies,task_props,blocks,pipeline_file,start_lineno)
 
 def read_block_content(lines,lineno,indent_seq):
 	"""

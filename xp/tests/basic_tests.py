@@ -564,3 +564,25 @@ class IndentingTestCase(unittest.TestCase):
 		p.unmark_all_tasks(recur=True)
 		p.run()
 	
+class UnmarkableTestCase(unittest.TestCase):
+
+	def test_basic_unmarkable(self):
+		unmarked_file = get_complete_filename('unmarked.txt')
+		try:
+			os.remove(unmarked_file)
+		except OSError:
+			# if the file doesn't exist
+			pass
+
+		p = get_pipeline(get_complete_filename('unmarkable1'))
+		p.unmark_all_tasks(recur=True)
+		p.run()
+
+
+		self.assertTrue(os.path.exists(unmarked_file))
+		os.remove(unmarked_file)
+
+		# confirm that the task umarked didn't get marked and ran again
+		p.run()
+		self.assertTrue(os.path.exists(unmarked_file))
+		os.remove(unmarked_file)
