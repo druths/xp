@@ -27,6 +27,7 @@ from tests.overload import *
 from tests.dep_cases import *
 from tests.linenos import *
 from tests.task_properties import *
+from tests.kernel_loader import *
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.DEBUG)
