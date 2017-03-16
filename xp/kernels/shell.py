@@ -23,7 +23,7 @@ from xp.kernels.base import Kernel, get_total_context
 
 logger = logging.getLogger(os.path.basename(__file__))
 
-class ShellKernel:
+class ShellKernel(Kernel):
 
 	@staticmethod
 	def default_lang_suffix():

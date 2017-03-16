@@ -14,6 +14,8 @@
   * Added support for a configuration file
   * Added support for pluggable kernels
 
+  * Added an ipython kernel
+
 ### Changed
 
   * Modularized the handling of code block implementations.

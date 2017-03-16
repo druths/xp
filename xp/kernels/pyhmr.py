@@ -24,7 +24,7 @@ from xp.kernels.base import Kernel, get_total_context
 
 logger = logging.getLogger(os.path.basename(__file__))
 
-class PythonHadoopMapReduceKernel:
+class PythonHadoopMapReduceKernel(Kernel):
 
 	@staticmethod
 	def default_lang_suffix():

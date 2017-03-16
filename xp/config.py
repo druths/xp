@@ -29,6 +29,7 @@ def configure_parser(config_parser):
 			xp.kernels.gnuplot.GNUPlotKernel
 			xp.kernels.awk.AwkKernel
 			xp.kernels.python.PythonKernel
+			xp.kernels.ipython.IPythonKernel
 			xp.kernels.pyhmr.PythonHadoopMapReduceKernel""")
 
 	return

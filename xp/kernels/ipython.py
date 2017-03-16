@@ -24,50 +24,52 @@ from xp.kernels.base import Kernel, get_total_context
 
 logger = logging.getLogger(os.path.basename(__file__))
 
-class AwkKernel(Kernel):
+class IPythonKernel(Kernel):
 
 	@staticmethod
 	def default_lang_suffix():
-		return 'awk'
+		return 'ipy'
 
 	@staticmethod
 	def short_help():
 		"""
 		Return a short description of the kernel.
 		"""
-		return 'run an AWK script'
+		return 'run ipython code'
 
 	@staticmethod
 	def long_help():
 		"""
 		Return a detailed description of the kernel, how it works, how it is configured, and used.
 		"""
-		return 'Run an awk script. Note that in order to read/write particular files, use the BEGIN preamble.'
+		return 'Run the commands in whatever the default ipython VM is on the host system.'
 
 	@staticmethod
 	def env_vars_help():
 		"""
 		Return a dictionary of environment variables (keys) and their meaning (values).
 		"""
-		return {}
+		return {
+			'IPYTHON_CMD': 'the python executable that will be run to execute the block code'
+		}
 
 	def run(self,arg_str,context,cwd,content):
 		"""
 		Raises a CalledProcessError if this fails.
 		"""
-		# write awk code to a tmp file
-		fh,tmp_filename = tempfile.mkstemp(suffix='awk')
+	
+		# write python code to a tmp file
+		fh,tmp_filename = tempfile.mkstemp(suffix='py')
 		os.write(fh,'\n'.join(content))
 		os.close(fh)
 	
-		logger.debug('wrote awk content to %s' % tmp_filename)
+		logger.debug('wrote ipython content to %s' % tmp_filename)
 		
-		exec_name = context.get('AWK','awk')
-		cmd = '%s -f %s %s' % (exec_name,tmp_filename,arg_str)
+		exec_name = context.get('IPYTHON_CMD','ipython')
+		cmd = '%s %s %s' % (exec_name,arg_str,tmp_filename)
 		logger.debug('using cmd: %s' % cmd)
-		retcode = subprocess.call(cmd,shell=True,
-					cwd=cwd,env=get_total_context(context))
+		retcode = subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
 	
 		if retcode != 0:
 			raise CalledProcessError(retcode,cmd,None)
-	
+

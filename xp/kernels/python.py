@@ -24,7 +24,7 @@ from xp.kernels.base import Kernel, get_total_context
 
 logger = logging.getLogger(os.path.basename(__file__))
 
-class PythonKernel:
+class PythonKernel(Kernel):
 
 	@staticmethod
 	def default_lang_suffix():
@@ -50,7 +50,7 @@ class PythonKernel:
 		Return a dictionary of environment variables (keys) and their meaning (values).
 		"""
 		return {
-			'PYTHON': 'the python executable that will be run to execute the block code'
+			'PYTHON_CMD': 'the python executable that will be run to execute the block code'
 		}
 
 	def run(self,arg_str,context,cwd,content):
@@ -65,7 +65,7 @@ class PythonKernel:
 	
 		logger.debug('wrote python content to %s' % tmp_filename)
 		
-		exec_name = context.get('PYTHON','python')
+		exec_name = context.get('PYTHON_CMD','python')
 		cmd = '%s %s %s' % (exec_name,arg_str,tmp_filename)
 		logger.debug('using cmd: %s' % cmd)
 		retcode = subprocess.call(cmd,shell=True,cwd=cwd,env=get_total_context(context))
