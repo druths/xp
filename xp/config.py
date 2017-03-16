@@ -6,6 +6,7 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 KERNEL_SECTION = 'Kernel'
 KERNELIMPL_SECTION = 'KernelImpl'
+ACTIVE_KERNELS_OPT = 'active_kernels'
 
 DEFAULT_CONFIG_DIR = os.path.join(os.environ['HOME'],'.config','xp')
 
@@ -24,12 +25,13 @@ def configure_parser(config_parser):
 	config_parser.set(KERNEL_SECTION,'kernel_paths','%(config_dir)s/kernels')
 	
 	config_parser.add_section(KERNELIMPL_SECTION)
-	config_parser.set(KERNELIMPL_SECTION,'test','xp.kernels.test.TestKernel')
-	config_parser.set(KERNELIMPL_SECTION,'sh','xp.kernels.shell.ShellKernel')
-	config_parser.set(KERNELIMPL_SECTION,'gnuplot','xp.kernels.gnuplot.GNUPlotKernel')
-	config_parser.set(KERNELIMPL_SECTION,'awk','xp.kernels.awk.AwkKernel')
-	config_parser.set(KERNELIMPL_SECTION,'py','xp.kernels.python.PythonKernel')
-	config_parser.set(KERNELIMPL_SECTION,'pyhmr','xp.kernels.pyhmr.PythonHadoopMapReduceKernel')
+	config_parser.set(KERNELIMPL_SECTION,'active_kernels',
+		"""	xp.kernels.test.TestKernel 
+			xp.kernels.shell.ShellKernel
+			xp.kernels.gnuplot.GNUPlotKernel
+			xp.kernels.awk.AwkKernel
+			xp.kernels.python.PythonKernel
+			xp.kernels.pyhmr.PythonHadoopMapReduceKernel""")
 
 	return
 

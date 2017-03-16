@@ -36,22 +36,29 @@ def get_total_context(context):
 #######
 class Kernel:
 
-	@property
-	def short_help(self):
+	@staticmethod
+	def default_lang_suffix():
+		"""
+		Return the language suffix the kernel is linked to.
+		"""
+		raise NotImplemented, 'lang_suffix not implemented'
+
+	@staticmethod
+	def short_help():
 		"""
 		Return a short description of the kernel.
 		"""
 		raise NotImplemented, 'short_help not implemented'
 
-	@property
-	def long_help(self):
+	@staticmethod
+	def long_help():
 		"""
 		Return a detailed description of the kernel, how it works, how it is configured, and used.
 		"""
 		raise NotImplemented, 'long_help not implemented'
 
-	@property
-	def env_vars_help(self):
+	@staticmethod
+	def env_vars_help():
 		"""
 		Return a dictionary of environment variables (keys) and their meaning (values).
 		"""

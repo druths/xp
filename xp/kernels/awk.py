@@ -26,22 +26,26 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 class AwkKernel:
 
-	@property
-	def short_help(self):
+	@staticmethod
+	def default_lang_suffix():
+		return 'awk'
+
+	@staticmethod
+	def short_help():
 		"""
 		Return a short description of the kernel.
 		"""
 		return 'run an AWK script'
 
-	@property
-	def long_help(self):
+	@staticmethod
+	def long_help():
 		"""
 		Return a detailed description of the kernel, how it works, how it is configured, and used.
 		"""
 		return 'Run an awk script. Note that in order to read/write particular files, use the BEGIN preamble.'
 
-	@property
-	def env_vars_help(self):
+	@staticmethod
+	def env_vars_help():
 		"""
 		Return a dictionary of environment variables (keys) and their meaning (values).
 		"""

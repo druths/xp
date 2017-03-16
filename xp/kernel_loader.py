@@ -33,9 +33,10 @@ class KernelLoader:
 		# load the lang_suffix to kernel mapping
 		self._lang_map = {}
 
-		suffixes = config_info.options(config.KERNELIMPL_SECTION)
-		for suffix in suffixes:
-			self._lang_map[suffix] = self.__get_kernel_class(config_info.get(config.KERNELIMPL_SECTION,suffix))
+		kernel_names = config_info.get(config.KERNELIMPL_SECTION,config.ACTIVE_KERNELS_OPT).split()
+		for kname in kernel_names:
+			kernel_class = self.__get_kernel_class(kname)
+			self._lang_map[kernel_class.default_lang_suffix()] = kernel_class
 
 		# done
 

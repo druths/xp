@@ -23,22 +23,26 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 class TestKernel:
 
-	@property
-	def short_help(self):
+	@staticmethod
+	def default_lang_suffix():
+		return 'test'
+	
+	@staticmethod
+	def short_help():
 		"""
 		Return a short description of the kernel.
 		"""
 		return 'a codeblock for internal testing'
 
-	@property
-	def long_help(self):
+	@staticmethod
+	def long_help():
 		"""
 		Return a detailed description of the kernel, how it works, how it is configured, and used.
 		"""
 		return 'This code block will write the content to the file named in the argument string.'
 
-	@property
-	def env_vars_help(self):
+	@staticmethod
+	def env_vars_help():
 		"""
 		Return a dictionary of environment variables (keys) and their meaning (values).
 		"""

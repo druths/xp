@@ -26,22 +26,26 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 class GNUPlotKernel:
 
-	@property
-	def short_help(self):
+	@staticmethod
+	def default_lang_suffix():
+		return 'gnuplot'
+
+	@staticmethod
+	def short_help():
 		"""
 		Return a short description of the kernel.
 		"""
 		return 'run a gnuplot script'
 
-	@property
-	def long_help(self):
+	@staticmethod
+	def long_help():
 		"""
 		Return a detailed description of the kernel, how it works, how it is configured, and used.
 		"""
 		return 'Run the commands in GNUPlot.'
 
-	@property
-	def env_vars_help(self):
+	@staticmethod
+	def env_vars_help():
 		"""
 		Return a dictionary of environment variables (keys) and their meaning (values).
 		"""
