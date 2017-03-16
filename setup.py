@@ -5,7 +5,7 @@ import sys
 setup(
 	name = 'xp',
 	version = '1.1',
-	packages = ['xp','xp.tests','xp.tests.pipelines'],
+	packages = ['xp','xp.tests','xp.tests.pipelines','xp.kernels'],
 	package_data = {'xp.tests.pipelines' : ['*'] },
 
 	scripts = ['scripts/xp'],

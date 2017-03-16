@@ -22,8 +22,6 @@ import time
 
 from xp.pipeline import *
 
-from xp.blocks import registered_code_blocks
-
 from xp.config import config_info, initialize_config_info
 
 logger = logging.getLogger(os.path.basename(__file__))
