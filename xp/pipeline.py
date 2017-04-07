@@ -81,8 +81,11 @@ def get_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
 
 	if filename not in _pipelines:
 		_under_construction.add(filename)
-		pipeline = parse_pipeline(filename,default_prefix)
-		_under_construction.remove(filename)
+                try:
+                    pipeline = parse_pipeline(filename,default_prefix)
+                finally:
+		    _under_construction.remove(filename)
+
 		_pipelines[filename] = pipeline
 
 	return _pipelines[filename]
