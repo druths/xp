@@ -64,6 +64,15 @@ def normalize_pipeline_fname(pipeline_fname):
 _pipelines = {}
 _under_construction = set()
 
+def reset_pipeline_factory():
+    """
+    Wipe out any knowledge of the pipeline factory about any pipelines it knows about.
+    """
+    _pipelines = {}
+    _under_construction = {}
+
+    return
+
 def get_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
 
 	# resolve filename to canonical absolute path
