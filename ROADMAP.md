@@ -2,6 +2,12 @@
 XP Roadmap
 ~~~~~~~~~~~~
 	
+v1.1
+----
+
+	* Integrate a proper grammar
+	* Support 3rd party kernels
+
 v1.2
 ----
 	
