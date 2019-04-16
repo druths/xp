@@ -41,28 +41,28 @@ class Kernel:
 		"""
 		Return the language suffix the kernel is linked to.
 		"""
-		raise NotImplemented, 'lang_suffix not implemented'
+		raise NotImplemented('lang_suffix not implemented')
 
 	@staticmethod
 	def short_help():
 		"""
 		Return a short description of the kernel.
 		"""
-		raise NotImplemented, 'short_help not implemented'
+		raise NotImplemented('short_help not implemented')
 
 	@staticmethod
 	def long_help():
 		"""
 		Return a detailed description of the kernel, how it works, how it is configured, and used.
 		"""
-		raise NotImplemented, 'long_help not implemented'
+		raise NotImplemented('long_help not implemented')
 
 	@staticmethod
 	def env_vars_help():
 		"""
 		Return a dictionary of environment variables (keys) and their meaning (values).
 		"""
-		raise NotImplemented, 'env_vars_help not implemented'
+		raise NotImplemented('env_vars_help not implemented')
 
 	def run(self,arg_str,context,cwd,content):
 		"""
@@ -76,4 +76,4 @@ class Kernel:
 		  - cwd is the current working directory
 		  - content is the actual raw text content of the block
 		"""
-		raise NotImplemented, 'run not implemented'
+		raise NotImplemented('run not implemented')

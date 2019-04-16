@@ -27,44 +27,44 @@ import xp.kernel_loader as kernel_loader
 BASE_PATH = os.path.dirname(__file__)
 
 def get_complete_filename(fname):
-	return os.path.join(BASE_PATH,'pipelines',fname)
+    return os.path.join(BASE_PATH,'pipelines',fname)
 
 class KernelLoaderTestCase(unittest.TestCase):
 
-	def test_no_kernels(self):
-		config.initialize_config_info_from_string("""
+    def test_no_kernels(self):
+        config.initialize_config_info_from_string("""
 [Kernels]
 active_kernels:
 """)
-		kl = kernel_loader.KernelLoader.reinitialize_singleton()
+        kl = kernel_loader.KernelLoader.reinitialize_singleton()
 
-		self.assertEquals(len(kl.kernels()),0)
+        self.assertEquals(len(kl.kernels()),0)
 
-		config.initialize_config_info()
-		kernel_loader.KernelLoader.reinitialize_singleton()
+        config.initialize_config_info()
+        kernel_loader.KernelLoader.reinitialize_singleton()
 
-	def test_one_kernels(self):
-		config.initialize_config_info_from_string("""
+    def test_one_kernels(self):
+        config.initialize_config_info_from_string("""
 [Kernels]
 active_kernels: xp.kernels.test.TestKernel
 """)
-		kl = kernel_loader.KernelLoader.reinitialize_singleton()
+        kl = kernel_loader.KernelLoader.reinitialize_singleton()
 
-		self.assertEquals(len(kl.kernels()),1)
+        self.assertEquals(len(kl.kernels()),1)
 
-		config.initialize_config_info()
-		kernel_loader.KernelLoader.reinitialize_singleton()
+        config.initialize_config_info()
+        kernel_loader.KernelLoader.reinitialize_singleton()
 
-	def test_custom_kernel_lang_suffix(self):
-		config.initialize_config_info_from_string("""
+    def test_custom_kernel_lang_suffix(self):
+        config.initialize_config_info_from_string("""
 [Kernels]
 active_kernels: xp.kernels.test.TestKernel(mytest)
 """)
-		kl = kernel_loader.KernelLoader.reinitialize_singleton()
+        kl = kernel_loader.KernelLoader.reinitialize_singleton()
 
-		self.assertEquals(len(kl.kernels()),1)
-		self.assertEquals(kl.lang_suffixes(),['mytest'])
+        self.assertEquals(len(kl.kernels()),1)
+        self.assertEquals(kl.lang_suffixes(),['mytest'])
 
-		config.initialize_config_info()
-		kernel_loader.KernelLoader.reinitialize_singleton()
+        config.initialize_config_info()
+        kernel_loader.KernelLoader.reinitialize_singleton()
 

@@ -50,14 +50,14 @@ FORCE_SOLO = 'force_solo' # just run this task - don't run any others
 FORCE_CHOICES = [FORCE_NONE,FORCE_TOP,FORCE_ALL,FORCE_SOLO]
 
 def normalize_pipeline_fname(pipeline_fname):
-	"""
-	Remove the default pipeline file suffix if it's there.
-	"""
-	name = pipeline_fname
-	if pipeline_fname.endswith('.%s' % DEFAULT_PIPELINE_FILE_SUFFIX):
-		name = pipeline_fname[:-(len(DEFAULT_PIPELINE_FILE_SUFFIX)+1)]
+    """
+    Remove the default pipeline file suffix if it's there.
+    """
+    name = pipeline_fname
+    if pipeline_fname.endswith('.%s' % DEFAULT_PIPELINE_FILE_SUFFIX):
+        name = pipeline_fname[:-(len(DEFAULT_PIPELINE_FILE_SUFFIX)+1)]
 
-	return name
+    return name
 
 #################
 # the factory functions
@@ -75,630 +75,626 @@ def reset_pipeline_factory():
 
 def get_pipeline(filename,default_prefix=(DIR_PREFIX,None)):
 
-	# resolve filename to canonical absolute path
-	filename = os.path.realpath(os.path.abspath(filename))
+    # resolve filename to canonical absolute path
+    filename = os.path.realpath(os.path.abspath(filename))
 
-	# check if the file exists
-	if not os.path.exists(filename):
-		raise PipelineNotFound(filename)
+    # check if the file exists
+    if not os.path.exists(filename):
+        raise PipelineNotFound(filename)
 
-	# this function is not thread-safe.  So if there's a call for a pipeline
-	# that is currently under construction, it's an indication of a circular
-	# reference in the dependencies
-	if filename in _under_construction:
-		raise Exception, 'circular pipeline reference to %s' % filename
+    # this function is not thread-safe.  So if there's a call for a pipeline
+    # that is currently under construction, it's an indication of a circular
+    # reference in the dependencies
+    if filename in _under_construction:
+        raise Exception('circular pipeline reference to %s' % filename)
 
-	if filename not in _pipelines:
-		_under_construction.add(filename)
-                try:
-                    pipeline = parse_pipeline(filename,default_prefix)
-                finally:
-		    _under_construction.remove(filename)
+    if filename not in _pipelines:
+        _under_construction.add(filename)
+        try:
+            pipeline = parse_pipeline(filename,default_prefix)
+        finally:
+            _under_construction.remove(filename)
 
-		_pipelines[filename] = pipeline
+        _pipelines[filename] = pipeline
 
-	return _pipelines[filename]
+    return _pipelines[filename]
 
 
 ########################
 # Functions to handle the dependency graph
 
 def get_leaves(all_tasks):
-	"""
-	Return a list of the leaf tasks (those that no other tasks are dependent on).
-	"""
-	# find the leaves
-	all_deps = set()
-	for t in all_tasks:
-		all_deps.update(t.get_deps())
+    """
+    Return a list of the leaf tasks (those that no other tasks are dependent on).
+    """
+    # find the leaves
+    all_deps = set()
+    for t in all_tasks:
+        all_deps.update(t.get_deps())
 
-	leaves = set(all_tasks).difference(all_deps)
+    leaves = set(all_tasks).difference(all_deps)
 
-	return leaves
+    return leaves
 
 def get_visitation_list(all_tasks):
-	"""
-	Return an ordered list of tasks, with roots first, leaves last.
-	Each element in the visitation list, V[i], is a tuple (task,depth)
-	where a higher depth indicates being closer to a root.
-	"""
-	leaves = get_leaves(all_tasks)
-	
-	# put tasks into layers
-	depth = 0
-	cur_layer = leaves
-	task_depths = {t:0 for t in leaves}
-	while len(cur_layer) > 0:
-		depth += 1
-		next_layer = set()
+    """
+    Return an ordered list of tasks, with roots first, leaves last.
+    Each element in the visitation list, V[i], is a tuple (task,depth)
+    where a higher depth indicates being closer to a root.
+    """
+    leaves = get_leaves(all_tasks)
+    
+    # put tasks into layers
+    depth = 0
+    cur_layer = leaves
+    task_depths = {t:0 for t in leaves}
+    while len(cur_layer) > 0:
+        depth += 1
+        next_layer = set()
 
-		for t in cur_layer:
-			for d in t.get_deps():
-				task_depths[d] = depth
-				next_layer.add(d)
+        for t in cur_layer:
+            for d in t.get_deps():
+                task_depths[d] = depth
+                next_layer.add(d)
 
-		cur_layer = next_layer
+        cur_layer = next_layer
 
-	max_depth = depth
+    # visit nodes in order of increasing depth
+    visitation_list = sorted(task_depths.items(),key=lambda x: -x[1])
 
-	# visit nodes in order of increasing depth
-	visitation_list = sorted(task_depths.items(),key=lambda x: -x[1])
-
-	return visitation_list
+    return visitation_list
 
 def dep_graph_iter(all_tasks):
-	
-	for task,depth in get_visitation_list(all_tasks):
-		yield task
-	
+    
+    for task,depth in get_visitation_list(all_tasks):
+        yield task
+    
 ########################
 # Classes used to represent a pipeline
 
 class Pipeline:
-	def __init__(self,abs_filename,preamble_stmts,tasks,default_prefix):
-		self.name = normalize_pipeline_fname(os.path.basename(abs_filename))
-		self.abs_filename = abs_filename
-		self.preamble = preamble_stmts
-		self.tasks = tasks
+    def __init__(self,abs_filename,preamble_stmts,tasks,default_prefix):
+        self.name = normalize_pipeline_fname(os.path.basename(abs_filename))
+        self.abs_filename = abs_filename
+        self.preamble = preamble_stmts
+        self.tasks = tasks
 
-		self.is_abstract = self.abs_filename.endswith('.axp')
+        self.is_abstract = self.abs_filename.endswith('.axp')
 
-		default_prefix = list(default_prefix) + ['',-1]
-		self.prefix_stmt = PrefixStatement(*default_prefix)
+        default_prefix = list(default_prefix) + ['',-1]
+        self.prefix_stmt = PrefixStatement(*default_prefix)
 
-		self.used_pipelines = None
+        self.used_pipelines = None
 
-		for t in self.tasks:
-			t.set_pipeline(self)
+        for t in self.tasks:
+            t.set_pipeline(self)
 
-		self.initialize()
+        self.initialize()
 
-	def get_used_pipelines(self):
-		return dict(self.used_pipelines)	
+    def get_used_pipelines(self):
+        return dict(self.used_pipelines)    
 
-	def get_prefix(self):
-		return self.prefix_stmt.get_prefix(self.abs_filename)
+    def get_prefix(self):
+        return self.prefix_stmt.get_prefix(self.abs_filename)
 
-	def abs_path(self):
-		return os.path.dirname(self.abs_filename)
+    def abs_path(self):
+        return os.path.dirname(self.abs_filename)
 
-	def get_stmt_from_lineno(self,lineno):
-		# adjust lineno to internal rep (internal linenos are indexed from zero)
-		lineno -= 1
+    def get_stmt_from_lineno(self,lineno):
+        # adjust lineno to internal rep (internal linenos are indexed from zero)
+        lineno -= 1
 
-		# check the preamble
-		for stmt in self.preamble:
-			if stmt.lineno == lineno:
-				return stmt
+        # check the preamble
+        for stmt in self.preamble:
+            if stmt.lineno == lineno:
+                return stmt
 
-		# check the tasks
-		for task in self.tasks:
-			start_lineno = task.lineno
-			end_lineno = task.get_final_lineno()
+        # check the tasks
+        for task in self.tasks:
+            start_lineno = task.lineno
+            end_lineno = task.get_final_lineno()
 
-			if start_lineno <= lineno <= end_lineno:
-				return task
+            if start_lineno <= lineno <= end_lineno:
+                return task
 
-		return None
+        return None
 
-	def initialize(self):
-		
-		# go through and deal with the extend and use statements
-		self.used_pipelines = {}
+    def initialize(self):
+        
+        # go through and deal with the extend and use statements
+        self.used_pipelines = {}
 
-		i = 0
-		stmts = self.preamble
-		new_preamble = []
-		for stmt in self.preamble:
+        new_preamble = []
+        for stmt in self.preamble:
 
-			if isinstance(stmt,ExtendStatement):
-				extended_pipeline = get_pipeline(stmt.filename)
+            if isinstance(stmt,ExtendStatement):
+                extended_pipeline = get_pipeline(stmt.filename)
 
-				# insert the preamble
-				new_preamble.extend(extended_pipeline.preamble)
+                # insert the preamble
+                new_preamble.extend(extended_pipeline.preamble)
 
-				# insert the tasks before the tasks defined here
-				existing_tasks = self.tasks
-				self.tasks = [x.copy() for x in  extended_pipeline.tasks]
-				for t in self.tasks:
-					t.set_pipeline(self)
-				self.tasks += existing_tasks
+                # insert the tasks before the tasks defined here
+                existing_tasks = self.tasks
+                self.tasks = [x.copy() for x in extended_pipeline.tasks]
+                for t in self.tasks:
+                    t.set_pipeline(self)
+                self.tasks += existing_tasks
 
-				# update the pipelines we depend on
-				for k,v in extended_pipeline.used_pipelines.items():
-					if k in self.used_pipelines and v != self.used_pipelines[k]:
-						raise Exception, 'conflict in aliases for used pipelines: %s' % k
-					else:
-						self.used_pipelines[k] = v	
-			elif isinstance(stmt,UseStatement):
-				filename = os.path.join(os.path.dirname(self.abs_filename),stmt.filename)
-				
-				try:
-					used_pipeline = get_pipeline('%s.xp' % filename)
-				except PipelineNotFound:
-					used_pipeline = get_pipeline(filename)
+                # update the pipelines we depend on
+                for k,v in extended_pipeline.used_pipelines.items():
+                    if k in self.used_pipelines and v != self.used_pipelines[k]:
+                        raise Exception('conflict in aliases for used pipelines: %s' % k)
+                    else:
+                        self.used_pipelines[k] = v    
+            elif isinstance(stmt,UseStatement):
+                filename = os.path.join(os.path.dirname(self.abs_filename),stmt.filename)
+                
+                try:
+                    used_pipeline = get_pipeline('%s.xp' % filename)
+                except PipelineNotFound:
+                    used_pipeline = get_pipeline(filename)
 
-				logger.debug('adding pipeline %s with alias %s' % (used_pipeline.name,stmt.alias))
-				self.used_pipelines[stmt.alias] = used_pipeline
-			elif isinstance(stmt,PrefixStatement):
-				self.prefix_stmt = stmt
-			else:
-				new_preamble.append(stmt)
+                logger.debug('adding pipeline %s with alias %s' % (used_pipeline.name,stmt.alias))
+                self.used_pipelines[stmt.alias] = used_pipeline
+            elif isinstance(stmt,PrefixStatement):
+                self.prefix_stmt = stmt
+            else:
+                new_preamble.append(stmt)
 
-		# initialize the prefix
-		prefix = self.prefix_stmt.get_prefix(self.abs_filename)
+        # initialize the prefix
+        prefix = self.prefix_stmt.get_prefix(self.abs_filename)
 
-		# update the preamble
-		self.preamble = new_preamble
+        # update the preamble
+        self.preamble = new_preamble
 
-		## now link up the tasks with dependencies
-		# storing tasks in order allows task overriding
-		self.task_lookup = dict()
-		for task in self.tasks:
-			if task.name in self.task_lookup:
-				logger.debug('task %s overloaded' % task.name)
-			self.task_lookup[task.name] = task
-		self.tasks = self.task_lookup.values()
+        ## now link up the tasks with dependencies
+        # storing tasks in order allows task overriding
+        self.task_lookup = dict()
+        for task in self.tasks:
+            if task.name in self.task_lookup:
+                logger.debug('task %s overloaded' % task.name)
+            self.task_lookup[task.name] = task
+        self.tasks = [*self.task_lookup.values()]
 
-		#self.task_lookup = dict(map(lambda x: (x.name,x),self.tasks))
+        #self.task_lookup = dict(map(lambda x: (x.name,x),self.tasks))
 
-		used_task_pattern = re.compile('^(%s)\.(%s)$' % (VAR_PATTERN,VAR_PATTERN))
-		for t in self.tasks:
-			# we need to do this in case this task was brought in through an extend statement - in which case
-			# we will replace its dependencies
-			t.clear_dependencies()
-			for d in t.dep_names:
-				# find the dependency
+        used_task_pattern = re.compile('^(%s)\.(%s)$' % (VAR_PATTERN,VAR_PATTERN))
+        for t in self.tasks:
+            # we need to do this in case this task was brought in through an extend statement - in which case
+            # we will replace its dependencies
+            t.clear_dependencies()
+            for d in t.dep_names:
+                # find the dependency
 
-				m = used_task_pattern.match(d)
-				if m:
-					pipeline_name = m.group(1)
-					task_name = m.group(2)
+                m = used_task_pattern.match(d)
+                if m:
+                    pipeline_name = m.group(1)
+                    task_name = m.group(2)
 
-					if pipeline_name not in self.used_pipelines:
-						raise Exception, 'undefined pipeline alias in %s: %s' % (t.name,pipeline_name)
+                    if pipeline_name not in self.used_pipelines:
+                        raise Exception('undefined pipeline alias in %s: %s' % (t.name,pipeline_name))
 
-					dep_task = self.used_pipelines[pipeline_name].get_task(task_name)
+                    dep_task = self.used_pipelines[pipeline_name].get_task(task_name)
 
-					if dep_task is None:
-						raise Exception, 'dependency of %s not found: %s.%s' % (t.name,pipeline_name,task_name)
-					
-					t.add_dependency(dep_task)
-				else:
-					if d in self.task_lookup:
-						t.add_dependency(self.task_lookup[d])
-					else:
-						raise Exception, 'dependency of %s not found: %s' % (t.name,d)
+                    if dep_task is None:
+                        raise Exception('dependency of %s not found: %s.%s' % (t.name,pipeline_name,task_name))
+                    
+                    t.add_dependency(dep_task)
+                else:
+                    if d in self.task_lookup:
+                        t.add_dependency(self.task_lookup[d])
+                    else:
+                        raise Exception('dependency of %s not found: %s' % (t.name,d))
 
-		# now update the context
-		self.build_context()
+        # now update the context
+        self.build_context()
 
-		# Done!
+        # Done!
 
-	def build_context(self):
-		# build context by processing all variables
-		self.context = {}
+    def build_context(self):
+        # build context by processing all variables
+        self.context = {}
 
-		# insert the pipline prefix for us to use and for code blocks to use
-		self.context[PIPELINE_PREFIX_VARNAME] = self.prefix_stmt.get_prefix(self.abs_filename)
-		
-		# update all variables from statements in the preamble
-		cwd = self.abs_path()
-		for s in self.preamble:
-			s.update_context(self.context,cwd,self.get_used_pipelines())
+        # insert the pipline prefix for us to use and for code blocks to use
+        self.context[PIPELINE_PREFIX_VARNAME] = self.prefix_stmt.get_prefix(self.abs_filename)
+        
+        # update all variables from statements in the preamble
+        cwd = self.abs_path()
+        for s in self.preamble:
+            s.update_context(self.context,cwd,self.get_used_pipelines())
 
-	def pre_run(self,task):
-		# initialize the prefix space if need be
-		self.prefix_stmt.create_prefix(self.abs_filename)
+    def pre_run(self,task):
+        # initialize the prefix space if need be
+        self.prefix_stmt.create_prefix(self.abs_filename)
 
-	def get_visitation_list(self):
-		# compile all tasks
-		return get_visitation_list(self.get_all_tasks())
+    def get_visitation_list(self):
+        # compile all tasks
+        return get_visitation_list(self.get_all_tasks())
 
-	def get_all_tasks(self):
-		"""
-		Get all tasks that this pipeline uses
-		"""
-		all_tasks = set(self.tasks)
-		new_tasks = self.tasks
-		while len(new_tasks) > 0:
-			next_tasks = set()
-			for t in new_tasks:
-				for d in t.get_deps():
-					if d not in all_tasks:
-						next_tasks.add(d)
-						all_tasks.add(d)
-			new_tasks = next_tasks
+    def get_all_tasks(self):
+        """
+        Get all tasks that this pipeline uses
+        """
+        all_tasks = set(self.tasks)
+        new_tasks = self.tasks
+        while len(new_tasks) > 0:
+            next_tasks = set()
+            for t in new_tasks:
+                for d in t.get_deps():
+                    if d not in all_tasks:
+                        next_tasks.add(d)
+                        all_tasks.add(d)
+            new_tasks = next_tasks
 
-		# TODO: Should probably memorize this
-		return all_tasks
+        # TODO: Should probably memorize this
+        return all_tasks
 
-	def get_task(self,task_name):
-		if task_name in self.task_lookup:
-			return self.task_lookup[task_name]
-		else:
-			return None
+    def get_task(self,task_name):
+        if task_name in self.task_lookup:
+            return self.task_lookup[task_name]
+        else:
+            return None
 
-	def get_context(self):
-		"""
-		Return a dictionary of variables
-		"""
-		return dict(self.context)
+    def get_context(self):
+        """
+        Return a dictionary of variables
+        """
+        return dict(self.context)
 
-	def mark_all_tasks(self,recur=False):
-		for t in self.tasks:
-			t.mark()
+    def mark_all_tasks(self,recur=False):
+        for t in self.tasks:
+            t.mark()
 
-		if recur:
-			for pipeline in self.used_pipelines.values():
-				pipeline.mark_all_tasks(recur=True)
+        if recur:
+            for pipeline in self.used_pipelines.values():
+                pipeline.mark_all_tasks(recur=True)
 
-	def unmark_all_tasks(self,recur=False):
-		for t in self.tasks:
-			t.unmark()
+    def unmark_all_tasks(self,recur=False):
+        for t in self.tasks:
+            t.unmark()
 
-		if recur:
-			for pipeline in self.used_pipelines.values():
-				pipeline.unmark_all_tasks(recur=True)
+        if recur:
+            for pipeline in self.used_pipelines.values():
+                pipeline.unmark_all_tasks(recur=True)
 
-	def run(self,force=FORCE_NONE):
-		if self.is_abstract:
-			raise Exception('an abstract pipeline cannot be run: %s' % self.abs_filename)
+    def run(self,force=FORCE_NONE):
+        if self.is_abstract:
+            raise Exception('an abstract pipeline cannot be run: %s' % self.abs_filename)
 
-		self.build_context()	
+        self.build_context()    
 
-		tasks_run = []
-		# run the leaf tasks - this will trigger other tasks as needed
-		for t in get_leaves(self.tasks):
-			logger.debug('running task %s' % t.name)
-			tasks_run.extend(t.run(force))
+        tasks_run = []
+        # run the leaf tasks - this will trigger other tasks as needed
+        for t in get_leaves(self.tasks):
+            logger.debug('running task %s' % t.name)
+            tasks_run.extend(t.run(force))
 
-		return tasks_run
-	
+        return tasks_run
+    
 class VariableAssignment:
-	def __init__(self,varname,value,source_file,lineno):
-		self.varname = varname
-		self.value = value
-		self.source_file = source_file
-		self.lineno = lineno
+    def __init__(self,varname,value,source_file,lineno):
+        self.varname = varname
+        self.value = value
+        self.source_file = source_file
+        self.lineno = lineno
 
-	def update_context(self,context,cwd,pipelines):
-		# TODO: Keep track of the line number
-		value = expand_variables(self.value,context,cwd,pipelines,self.source_file,self.lineno)
-		logger.debug('expanded "%s" to "%s"' % (self.value,value))
+    def update_context(self,context,cwd,pipelines):
+        # TODO: Keep track of the line number
+        value = expand_variables(self.value,context,cwd,pipelines,self.source_file,self.lineno)
+        logger.debug('expanded "%s" to "%s"' % (self.value,value))
 
-		context[self.varname] = value	
+        context[self.varname] = value    
 
 class DeleteVariable:
-	def __init__(self,varname,source_file,lineno):
-		self.varname = varname
-		self.source_file = source_file
-		self.lineno = lineno
+    def __init__(self,varname,source_file,lineno):
+        self.varname = varname
+        self.source_file = source_file
+        self.lineno = lineno
 
-	def update_context(self,context,cwd,pipelines):
-		if self.varname in context:
-			del context[self.varname]
+    def update_context(self,context,cwd,pipelines):
+        if self.varname in context:
+            del context[self.varname]
 
 class PrefixStatement:
-	def __init__(self,prefix_type,prefix,source_file,lineno):
-		self.prefix_type = prefix_type
-		self.source_file = source_file
-		self.lineno = lineno
+    def __init__(self,prefix_type,prefix,source_file,lineno):
+        self.prefix_type = prefix_type
+        self.source_file = source_file
+        self.lineno = lineno
 
-		self.prefix = prefix
+        self.prefix = prefix
 
-		if prefix_type not in [FILE_PREFIX,DIR_PREFIX]:
-			raise ValueError, 'prefix should either be "file" or "dir"'
-	
-	def get_prefix(self,pipeline_abs_fname):
-		if self.prefix is None:
-			# remove the file suffix if needed
-			name = normalize_pipeline_fname(pipeline_abs_fname)
+        if prefix_type not in [FILE_PREFIX,DIR_PREFIX]:
+            raise ValueError('prefix should either be "file" or "dir"')
+    
+    def get_prefix(self,pipeline_abs_fname):
+        if self.prefix is None:
+            # remove the file suffix if needed
+            name = normalize_pipeline_fname(pipeline_abs_fname)
 
-			if self.prefix_type == FILE_PREFIX:
-				return '%s_' % name #pipeline_abs_fname
-			elif self.prefix_type == DIR_PREFIX:
-				dir_prefix = '%s_data' % name #pipeline_abs_fname
-				return os.path.join(dir_prefix,'')
-			else:
-				# it should be impossible to get here
-				raise Exception, 'unknown prefix type: %s' % self.prefix_type
-		else:
-			if self.prefix_type == FILE_PREFIX:
-				return os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
-			elif self.prefix_type == DIR_PREFIX:
-				total_prefix = os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
-				logger.debug('dir prefix = %s' % total_prefix)
-				return os.path.join(total_prefix,'')
-			else:
-				raise Exception, 'unknown prefix type: %s' % self.prefix_type
+            if self.prefix_type == FILE_PREFIX:
+                return '%s_' % name
+            elif self.prefix_type == DIR_PREFIX:
+                dir_prefix = '%s_data' % name
+                return os.path.join(dir_prefix,'')
+            else:
+                # it should be impossible to get here
+                raise Exception('unknown prefix type: %s' % self.prefix_type)
+        else:
+            if self.prefix_type == FILE_PREFIX:
+                return os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
+            elif self.prefix_type == DIR_PREFIX:
+                total_prefix = os.path.join(os.path.dirname(pipeline_abs_fname),self.prefix)
+                logger.debug('dir prefix = %s' % total_prefix)
+                return os.path.join(total_prefix,'')
+            else:
+                raise Exception('unknown prefix type: %s' % self.prefix_type)
 
-	def create_prefix(self,pipeline_abs_fname):
-		def mkdirs(d):
-			if os.path.exists(d):
-				return
-			else:
-				head,tail = os.path.split(d)
-	
-				# make all directories up to this one
-				if head is not None:
-					mkdirs(head)
-	
-				# make this directory if it isn't just an empty string
-				if len(tail) > 0:
-					os.mkdir(d)
-		
-				return
+    def create_prefix(self,pipeline_abs_fname):
+        def mkdirs(d):
+            if os.path.exists(d):
+                return
+            else:
+                head,tail = os.path.split(d)
+    
+                # make all directories up to this one
+                if head is not None:
+                    mkdirs(head)
+    
+                # make this directory if it isn't just an empty string
+                if len(tail) > 0:
+                    os.mkdir(d)
+        
+                return
 
-		prefix = self.get_prefix(pipeline_abs_fname)
+        prefix = self.get_prefix(pipeline_abs_fname)
 
-		if self.prefix_type == FILE_PREFIX:
-			return
-		elif self.prefix_type == DIR_PREFIX:
-			logger.debug('creating directory: %s' % prefix)
-			mkdirs(prefix)
-		else:
-			raise Exception, 'unknown prefix type: %s' % self.prefix_type
+        if self.prefix_type == FILE_PREFIX:
+            return
+        elif self.prefix_type == DIR_PREFIX:
+            logger.debug('creating directory: %s' % prefix)
+            mkdirs(prefix)
+        else:
+            raise Exception('unknown prefix type: %s' % self.prefix_type)
 
 class ExtendStatement:
-	def __init__(self,filename,source_file,lineno):
-		self.filename = filename
-		self.source_file = source_file
-		self.lineno = lineno
-		
+    def __init__(self,filename,source_file,lineno):
+        self.filename = filename
+        self.source_file = source_file
+        self.lineno = lineno
+        
 class UseStatement: 
-	def __init__(self,filename,source_file,lineno,alias=None): 
-		self.source_file = source_file
-		self.filename = filename 
-		self.lineno = lineno
+    def __init__(self,filename,source_file,lineno,alias=None): 
+        self.source_file = source_file
+        self.filename = filename 
+        self.lineno = lineno
 
-		if alias is not None: 
-			self.alias = alias 
-		else: 
-			self.alias = filename
+        if alias is not None: 
+            self.alias = alias 
+        else: 
+            self.alias = filename
 
 class Task:
-	def __init__(self,name,is_markable,dep_names,properties,blocks,source_file,lineno):
-		self.name = name
-		self._is_markable = is_markable
-		self.dep_names = dep_names
-		self._properties = properties
-		self.blocks = blocks
-		self.source_file = source_file
-		self.lineno = lineno
+    def __init__(self,name,is_markable,dep_names,properties,blocks,source_file,lineno):
+        self.name = name
+        self._is_markable = is_markable
+        self.dep_names = dep_names
+        self._properties = properties
+        self.blocks = blocks
+        self.source_file = source_file
+        self.lineno = lineno
 
-		self._dependencies = []
+        self._dependencies = []
 
-	def properties(self):
-		return dict(self._properties)
+    def properties(self):
+        return dict(self._properties)
 
-	def get_final_lineno(self):
-		return max([b.get_final_lineno() for b in self.blocks])	
+    def get_final_lineno(self):
+        return max([b.get_final_lineno() for b in self.blocks])    
 
-	def copy(self):
-		blocks = map(lambda x: x.copy(), self.blocks)
-		return Task(self.name,self._is_markable,self.dep_names,dict(self._properties),blocks,self.source_file,self.lineno)
+    def copy(self):
+        blocks = [x.copy() for x in self.blocks]
+        return Task(self.name,self._is_markable,self.dep_names,dict(self._properties),blocks,self.source_file,self.lineno)
 
-	def set_pipeline(self,pipeline):
-		self.pipeline = pipeline
+    def set_pipeline(self,pipeline):
+        self.pipeline = pipeline
 
-	def get_deps(self):
-		return list(self._dependencies)
+    def get_deps(self):
+        return list(self._dependencies)
 
-	def clear_dependencies(self):
-		self._dependencies = []
+    def clear_dependencies(self):
+        self._dependencies = []
 
-	def add_dependency(self,task):
-		self._dependencies.append(task)
+    def add_dependency(self,task):
+        self._dependencies.append(task)
 
-	def is_markable(self):
-		return self._is_markable
+    def is_markable(self):
+        return self._is_markable
 
-	def mark_file(self):
-		return os.path.join(self.pipeline.abs_path(),'.%s-%s.mark' % (self.pipeline.name,self.name))
+    def mark_file(self):
+        return os.path.join(self.pipeline.abs_path(),'.%s-%s.mark' % (self.pipeline.name,self.name))
 
-	def unmark(self):
-		# Remove the marker file
-		if self.is_marked():
-			logger.debug('removing mark file %s' % self.mark_file())
-			os.remove(self.mark_file())
-	
-	def mark(self):
-		mark_file = self.mark_file()
+    def unmark(self):
+        # Remove the marker file
+        if self.is_marked():
+            logger.debug('removing mark file %s' % self.mark_file())
+            os.remove(self.mark_file())
+    
+    def mark(self):
+        mark_file = self.mark_file()
 
-		logger.debug('writing mark file: %s' % mark_file)
-		# Make the marker file
-		fh = open(mark_file,'w')
-		fh.close()
+        logger.debug('writing mark file: %s' % mark_file)
+        # Make the marker file
+        fh = open(mark_file,'w')
+        fh.close()
 
-	def is_marked(self):
-		# if it's unmarkable, ignore any mark file
-		if not self._is_markable:
-			return False
+    def is_marked(self):
+        # if it's unmarkable, ignore any mark file
+        if not self._is_markable:
+            return False
 
-		return os.path.exists(self.mark_file())
+        return os.path.exists(self.mark_file())
 
-	def mark_timestamp(self):
-		if not self.is_marked():
-			return None
-		else:
-			logger.debug('returning ts for mark file: %s' % self.mark_file())
-			return os.path.getmtime(self.mark_file())
+    def mark_timestamp(self):
+        if not self.is_marked():
+            return None
+        else:
+            logger.debug('returning ts for mark file: %s' % self.mark_file())
+            return os.path.getmtime(self.mark_file())
 
-	def run(self,force=FORCE_NONE):
+    def run(self,force=FORCE_NONE):
 
-		tasks_run = []
+        tasks_run = []
 
-		if self.pipeline.is_abstract:
-			raise Exception('an abstract pipeline cannot be run: %s' % self.pipeline.abs_filename)
+        if self.pipeline.is_abstract:
+            raise Exception('an abstract pipeline cannot be run: %s' % self.pipeline.abs_filename)
 
-		self.pipeline.pre_run(self)
+        self.pipeline.pre_run(self)
 
-		assert force in FORCE_CHOICES 
+        assert force in FORCE_CHOICES 
 
-#		logger.debug('task %s: marked = %d' % (self.name,self.is_marked()))
-#		if force == FORCE_NONE and self.is_marked():
-#			logger.info('task %s is marked, skipping' % self.name)
-#			return
+#        logger.debug('task %s: marked = %d' % (self.name,self.is_marked()))
+#        if force == FORCE_NONE and self.is_marked():
+#            logger.info('task %s is marked, skipping' % self.name)
+#            return
 
-		# first run all dependencies
-		if force != FORCE_SOLO:
-			dep_force = FORCE_ALL if force == FORCE_ALL else FORCE_NONE
-			logger.debug('task %s: run dependencies' % self.name)
-			for d in self._dependencies:
-				tasks_run.extend(d.run(force=dep_force))
-		else:
-			logger.debug('task %s: skipping dependencies, solo mode!' % self.name)
-		
-		# check if we need to run this task
-		run_task = False
-		if force != FORCE_NONE:
-			logger.debug('run task %s: forced' % self.name)
-			run_task = True
-		elif not self.is_marked():
-			logger.debug('run task %s: unmarked' % self.name)
-			run_task = True
-		else:
-			mst = self.mark_timestamp()
-			for d in self._dependencies:
-				if mst < d.mark_timestamp():
-					run_task = True
-					break
+        # first run all dependencies
+        if force != FORCE_SOLO:
+            dep_force = FORCE_ALL if force == FORCE_ALL else FORCE_NONE
+            logger.debug('task %s: run dependencies' % self.name)
+            for d in self._dependencies:
+                tasks_run.extend(d.run(force=dep_force))
+        else:
+            logger.debug('task %s: skipping dependencies, solo mode!' % self.name)
+        
+        # check if we need to run this task
+        run_task = False
+        if force != FORCE_NONE:
+            logger.debug('run task %s: forced' % self.name)
+            run_task = True
+        elif not self.is_marked():
+            logger.debug('run task %s: unmarked' % self.name)
+            run_task = True
+        else:
+            mst = self.mark_timestamp()
+            for d in self._dependencies:
+                if mst < d.mark_timestamp():
+                    run_task = True
+                    break
 
-		if not run_task:
-			return tasks_run
+        if not run_task:
+            return tasks_run
 
-		logger.debug('run task %s: dep timestamp' % self.name)
+        logger.debug('run task %s: dep timestamp' % self.name)
 
-		# get ready to run this task
-		context = self.pipeline.get_context()
-		pipelines = self.pipeline.get_used_pipelines()
-		cwd = self.pipeline.abs_path()
+        # get ready to run this task
+        context = self.pipeline.get_context()
+        pipelines = self.pipeline.get_used_pipelines()
+        cwd = self.pipeline.abs_path()
 
-		# run this tasks
-		logger.info('task %s: running blocks...' % self.name)
-		for b in self.blocks:
-			logger.debug('task %s: running block %s' % (self.name,str(b.__class__)))
-			b.run(context,pipelines,cwd)
+        # run this tasks
+        logger.info('task %s: running blocks...' % self.name)
+        for b in self.blocks:
+            logger.debug('task %s: running block %s' % (self.name,str(b.__class__)))
+            b.run(context,pipelines,cwd)
 
-		# Update the marker
-		self.mark()
+        # Update the marker
+        self.mark()
 
-		tasks_run.append(self)
+        tasks_run.append(self)
 
-		return tasks_run
+        return tasks_run
 
 class ExportBlock:
-	def __init__(self,statements,source_file,lineno):
-		self.statements = statements
-		self.source_file = source_file
-		self.lineno = lineno
+    def __init__(self,statements,source_file,lineno):
+        self.statements = statements
+        self.source_file = source_file
+        self.lineno = lineno
 
-	def copy(self):
-		return ExportBlock(self.statements,self.source_file,self.lineno)
+    def copy(self):
+        return ExportBlock(self.statements,self.source_file,self.lineno)
 
-	def run(self,context,pipelines,cwd):
-		# modify the context - that's all the export block can do
-		self.update_context(context,cwd,pipelines)
+    def run(self,context,pipelines,cwd):
+        # modify the context - that's all the export block can do
+        self.update_context(context,cwd,pipelines)
 
-	def update_context(self,context,cwd,pipelines):
-		for s in self.statements:
-			s.update_context(context,cwd,pipelines)
+    def update_context(self,context,cwd,pipelines):
+        for s in self.statements:
+            s.update_context(context,cwd,pipelines)
 
-	def get_final_lineno(self):
-		if len(self.statements) == 0:
-			return self.lineno
-		else:
-			return self.statements[-1].lineno
+    def get_final_lineno(self):
+        if len(self.statements) == 0:
+            return self.lineno
+        else:
+            return self.statements[-1].lineno
 
 class CodeBlock:
-	def __init__(self,lang,arg_str,content,source_file,lineno):
-		self.lang = lang
-		self.arg_str = arg_str
-		self.content = content
-		self.source_file = source_file
-		self.lineno = lineno
+    def __init__(self,lang,arg_str,content,source_file,lineno):
+        self.lang = lang
+        self.arg_str = arg_str
+        self.content = content
+        self.source_file = source_file
+        self.lineno = lineno
 
-	def get_final_lineno(self):
-		# num lines
-		return self.lineno + len(self.content)
-	
-	def copy(self):
-		return CodeBlock(self.lang,self.arg_str,self.content,self.source_file,self.lineno)
+    def get_final_lineno(self):
+        # num lines
+        return self.lineno + len(self.content)
+    
+    def copy(self):
+        return CodeBlock(self.lang,self.arg_str,self.content,self.source_file,self.lineno)
 
-	def run(self,context,pipelines,cwd):
+    def run(self,context,pipelines,cwd):
 
-		# expand any variables in the argument string
-		# TODO: Update line numbers
-		arg_str = expand_variables(self.arg_str,context,cwd,pipelines,
-									self.source_file,self.lineno)
+        # expand any variables in the argument string
+        # TODO: Update line numbers
+        arg_str = expand_variables(self.arg_str,context,cwd,pipelines,
+                                   self.source_file,self.lineno)
 
-		# expand any variables in the content
-		# TODO: Update line numbers
-		content = []
-		for i,line in enumerate(self.content,1):
-			content.append(expand_variables(line,context,cwd,pipelines,self.source_file,self.lineno+i))
+        # expand any variables in the content
+        # TODO: Update line numbers
+        content = []
+        for i,line in enumerate(self.content,1):
+            content.append(expand_variables(line,context,cwd,pipelines,self.source_file,self.lineno+i))
 
-		logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
+        logger.debug('expanded\n%s\n\nto\n%s' % (self.content,content))
 
-		kloader = KernelLoader.singleton()
-		if self.lang in kloader:
-			kernel = kloader.get_kernel(self.lang) 
-			try:
-				kernel.run(arg_str,context,cwd,content)
-			except subprocess.CalledProcessError:
-				raise BlockFailed
-		else:
-			raise BlockFailed, 'unknown language suffix: %s' % self.lang
+        kloader = KernelLoader.singleton()
+        if self.lang in kloader:
+            kernel = kloader.get_kernel(self.lang) 
+            try:
+                kernel.run(arg_str,context,cwd,content)
+            except subprocess.CalledProcessError:
+                raise BlockFailed('process failed')
+        else:
+            raise BlockFailed('unknown language suffix: %s' % self.lang)
 
 class PipelineNotFound(Exception):
-	def __init__(self,pipeline_file):
-		Exception.__init__(self,'Unable to find pipeline: %s' % pipeline_file)
-		self.pipeline_file = pipeline_file
+    def __init__(self,pipeline_file):
+        Exception.__init__(self,'Unable to find pipeline: %s' % pipeline_file)
+        self.pipeline_file = pipeline_file
 
 class BlockFailed(Exception):
-	pass
+    pass
 
 class ParseException(Exception):
-	
-	def __init__(self,source_file,lineno,message):
-		Exception.__init__(self,message)
-		self.source_file = source_file
-		self.lineno = lineno+1 # all internal line numbers are index 0
+    
+    def __init__(self,source_file,lineno,message):
+        Exception.__init__(self,message)
+        self.source_file = source_file
+        self.lineno = lineno+1 # all internal line numbers are index 0
 
 class IllegalValueException(Exception):
-	
-	def __init__(self,source_file,lineno,message):
-		Exception.__init__(self,message)
-		self.source_file = source_file
-		self.lineno = lineno+1 # all internal line numbers are index 0
-	
+    
+    def __init__(self,source_file,lineno,message):
+        Exception.__init__(self,message)
+        self.source_file = source_file
+        self.lineno = lineno+1 # all internal line numbers are index 0
+    
 class UnknownVariableException(Exception):
-	
-	def __init__(self,source_file,lineno,message):
-		Exception.__init__(self,message)
-		self.source_file = source_file
-		self.lineno = lineno+1 # all internal line numbers are index 0
+    
+    def __init__(self,source_file,lineno,message):
+        Exception.__init__(self,message)
+        self.source_file = source_file
+        self.lineno = lineno+1 # all internal line numbers are index 0
 
 CONFIG_VAR_PATTERN = '\w[\w\d_]*(\.\w[\w\d_]*)*'
 VAR_PATTERN = '\w[\w\d_]*'
@@ -706,480 +702,485 @@ LANG_SUFFIX_PATTERN = '\w+'
 FILE_PATTERN = '.+?'
 
 def parse_pipeline(pipeline_file,default_prefix):
-	
-	# read in the content of the file
-	pipeline_file = os.path.realpath(os.path.abspath(pipeline_file))
-	lines = open(pipeline_file,'r').readlines()
+    
+    # read in the content of the file
+    pipeline_file = os.path.realpath(os.path.abspath(pipeline_file))
+    lines = open(pipeline_file,'r').readlines()
 
-	# read the preamble
-	extend_pattern = re.compile('^extend\s+(%s)$' % FILE_PATTERN)
-	use_pattern = re.compile('^use\s+(%s)(\s+as\s+(%s))?$' % (FILE_PATTERN,VAR_PATTERN))
-	prefix_pattern = re.compile('^prefix\s+(file|dir)(\s+%s)?\s*$' % FILE_PATTERN)
-	var_assign_pattern = re.compile('^(%s)\s*=(.+)' % VAR_PATTERN)
-	var_del_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
+    # read the preamble
+    extend_pattern = re.compile('^extend\s+(%s)$' % FILE_PATTERN)
+    use_pattern = re.compile('^use\s+(%s)(\s+as\s+(%s))?$' % (FILE_PATTERN,VAR_PATTERN))
+    prefix_pattern = re.compile('^prefix\s+(file|dir)(\s+%s)?\s*$' % FILE_PATTERN)
+    var_assign_pattern = re.compile('^(%s)\s*=(.+)' % VAR_PATTERN)
+    var_del_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
 
-	lineno = 0
-	in_comment_block = False
-	in_preamble = True
-	statements = []
-	while lineno < len(lines) and in_preamble:
-		cur_line = lines[lineno].strip()
+    lineno = 0
+    in_comment_block = False
+    in_preamble = True
+    statements = []
+    while lineno < len(lines) and in_preamble:
+        cur_line = lines[lineno].strip()
 
-		m = extend_pattern.match(cur_line)
-		if in_comment_block:
-			if cur_line.startswith('###'):
-				in_comment_block = False
-		elif cur_line.startswith('###'):
-			in_comment_block = True
-		elif m:	
-			# load in the pipeline
-			fname = m.group(1)
-			complete_fname = os.path.join(os.path.dirname(pipeline_file),fname)
-			statements.append(ExtendStatement(complete_fname,pipeline_file,lineno))
-		else:
-			m = var_assign_pattern.match(cur_line)
-			if m:
-				logger.debug('found variable assignment: %s,%s' % (m.group(1),m.group(2)))
-				statements.append(VariableAssignment(m.group(1),m.group(2),pipeline_file,lineno))
-			else:
-				m = var_del_pattern.match(cur_line)
-				if m:
-					logger.debug('found delete variable: %s' % m.group(1))
-					statements.append(DeleteVariable(m.group(1),pipeline_file,lineno))
-				else:
-					m = use_pattern.match(cur_line)
-					if m:
-						alias = m.group(3)
-						logger.debug('found use: %s,%s' % (m.group(1),str(m.group(3))))
-						statements.append(UseStatement(m.group(1),pipeline_file,lineno,alias))
-					else:
-						m = prefix_pattern.match(cur_line)
-						if m:
-							prefix_type = m.group(1)
-							prefix = m.group(2)
+        m = extend_pattern.match(cur_line)
+        if in_comment_block:
+            if cur_line.startswith('###'):
+                in_comment_block = False
+        elif cur_line.startswith('###'):
+            in_comment_block = True
+        elif m:    
+            # load in the pipeline
+            fname = m.group(1)
+            complete_fname = os.path.join(os.path.dirname(pipeline_file),fname)
+            statements.append(ExtendStatement(complete_fname,pipeline_file,lineno))
+        else:
+            m = var_assign_pattern.match(cur_line)
+            if m:
+                logger.debug('found variable assignment: %s,%s' % (m.group(1),m.group(2)))
+                statements.append(VariableAssignment(m.group(1),m.group(2),pipeline_file,lineno))
+            else:
+                m = var_del_pattern.match(cur_line)
+                if m:
+                    logger.debug('found delete variable: %s' % m.group(1))
+                    statements.append(DeleteVariable(m.group(1),pipeline_file,lineno))
+                else:
+                    m = use_pattern.match(cur_line)
+                    if m:
+                        alias = m.group(3)
+                        logger.debug('found use: %s,%s' % (m.group(1),str(m.group(3))))
+                        statements.append(UseStatement(m.group(1),pipeline_file,lineno,alias))
+                    else:
+                        m = prefix_pattern.match(cur_line)
+                        if m:
+                            prefix_type = m.group(1)
+                            prefix = m.group(2)
 
-							if prefix:
-								prefix = prefix.strip()
-								if len(prefix) == 0:
-									prefix = None
+                            if prefix:
+                                prefix = prefix.strip()
+                                if len(prefix) == 0:
+                                    prefix = None
 
-							logger.debug('found prefix: %s, %s' % (prefix_type,prefix))
-							statements.append(PrefixStatement(prefix_type,prefix,pipeline_file,lineno))
-						else:
-							if len(cur_line) == 0 or cur_line.startswith('#'):
-								pass
-							else:
-								in_preamble = False
+                            logger.debug('found prefix: %s, %s' % (prefix_type,prefix))
+                            statements.append(PrefixStatement(prefix_type,prefix,pipeline_file,lineno))
+                        else:
+                            if len(cur_line) == 0 or cur_line.startswith('#'):
+                                pass
+                            else:
+                                in_preamble = False
 
-		if in_preamble:
-			lineno += 1
-			
-	# read the tasks
-	task_pattern = re.compile('^(\*?)(%s)(\.%s)?\s*:(.*)$' % (VAR_PATTERN,LANG_SUFFIX_PATTERN))
-	tasks = []
-	in_comment_block = False
+        if in_preamble:
+            lineno += 1
+            
+    # read the tasks
+    task_pattern = re.compile('^(\*?)(%s)(\.%s)?\s*:(.*)$' % (VAR_PATTERN,LANG_SUFFIX_PATTERN))
+    tasks = []
+    in_comment_block = False
 
-	while lineno < len(lines):
-		cur_line = lines[lineno].rstrip()
+    while lineno < len(lines):
+        cur_line = lines[lineno].rstrip()
 
-		if in_comment_block:
-			lineno += 1
-			if cur_line.startswith('###'):
-				in_comment_block = False
-		elif cur_line.startswith('###'):
-			lineno += 1
-			in_comment_block = True
-		elif len(cur_line) == 0 or cur_line.strip().startswith('#'):
-			lineno += 1
-		else:
-			m = task_pattern.match(cur_line)
-			if m:
-				is_markable = m.group(1) == ''
-				task_name = m.group(2)
-				lang_suffix = m.group(3)
-				dep_str = m.group(4)
+        if in_comment_block:
+            lineno += 1
+            if cur_line.startswith('###'):
+                in_comment_block = False
+        elif cur_line.startswith('###'):
+            lineno += 1
+            in_comment_block = True
+        elif len(cur_line) == 0 or cur_line.strip().startswith('#'):
+            lineno += 1
+        else:
+            m = task_pattern.match(cur_line)
+            if m:
+                is_markable = m.group(1) == ''
+                task_name = m.group(2)
+                lang_suffix = m.group(3)
+                dep_str = m.group(4)
 
-				# drop the leading period from the language suffix, if it exists
-				if lang_suffix != None:
-					lang_suffix = lang_suffix[1:]
-				else:
-					lang_suffix = ''
+                # drop the leading period from the language suffix, if it exists
+                if lang_suffix != None:
+                    lang_suffix = lang_suffix[1:]
+                else:
+                    lang_suffix = ''
 
-				logger.debug('parsing task: %s (LANG=%s)' % (task_name,lang_suffix))
+                logger.debug('parsing task: %s (LANG=%s)' % (task_name,lang_suffix))
 
-				lineno,task = parse_task(task_name,is_markable,lang_suffix,dep_str,lines,pipeline_file,lineno)
+                lineno,task = parse_task(task_name,is_markable,lang_suffix,dep_str,lines,pipeline_file,lineno)
 
-				tasks.append(task)
-			else:
-				raise ParseException(pipeline_file,lineno,'expected a task definition, got: %s' % cur_line)
+                tasks.append(task)
+            else:
+                raise ParseException(pipeline_file,lineno,'expected a task definition, got: %s' % cur_line)
 
-	# make the pipeline
-	pipeline = Pipeline(pipeline_file,statements,tasks,default_prefix=default_prefix)
+    # make the pipeline
+    pipeline = Pipeline(pipeline_file,statements,tasks,default_prefix=default_prefix)
 
-	# return the pipeline
-	return pipeline
+    # return the pipeline
+    return pipeline
 
 def find_indentation_match(lines,lineno,pattern):
-	"""
-	Find the first line that matches the specified pattern and isn't an empty line
-	Return None if there aren't any lines found.
-	"""
-	while lineno < len(lines):
-		if len(lines[lineno].strip()) == 0:
-			lineno += 1
-		else:
-			return pattern.match(lines[lineno])
-	
-	# if we got here, we ran out of lines
-	return None
+    """
+    Find the first line that matches the specified pattern and isn't an empty line
+    Return None if there aren't any lines found.
+    """
+    while lineno < len(lines):
+        if len(lines[lineno].strip()) == 0:
+            lineno += 1
+        else:
+            return pattern.match(lines[lineno])
+    
+    # if we got here, we ran out of lines
+    return None
 
 def parse_task(task_name,is_markable,lang_suffix,dep_str,lines,pipeline_file,lineno):
-	"""
-	Parse the task.
+    """
+    Parse the task.
 
-	task_name is the name of the task
-	is_markable is False if the task cannot be marked by running it
-	lang_suffix is the suffix given with the task. For multi-block tasks, this will be
-	  the empty string.  For simple tasks, this will be a suffix resolving to one of 
-	  the supported code block types.
-	dep_str is the dependency string on the task definition line
-	lineno is the line number where the task definition starts - on which the
-	task_name and dependencies string appears.
+    task_name is the name of the task
+    is_markable is False if the task cannot be marked by running it
+    lang_suffix is the suffix given with the task. For multi-block tasks, this will be
+      the empty string.  For simple tasks, this will be a suffix resolving to one of 
+      the supported code block types.
+    dep_str is the dependency string on the task definition line
+    lineno is the line number where the task definition starts - on which the
+    task_name and dependencies string appears.
 
-	Raise exception if the task was invalid otherwise, 
-	return (next_lineno,Task)
-	"""
+    Raise exception if the task was invalid otherwise, 
+    return (next_lineno,Task)
+    """
 
-	start_lineno = lineno
+    start_lineno = lineno
 
-	####
-	# parse the dependency list
-	live_deps_string = re.compile('^([^#]*)')
-	valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
+    ####
+    # parse the dependency list
+    live_deps_string = re.compile('^([^#]*)')
+    valid_dep_string = re.compile('^%s(\.%s)?$' % (VAR_PATTERN,VAR_PATTERN))
 
-	# drop any comment end part
-	m = live_deps_string.match(dep_str)
-	dep_str = m.group(1)
+    # drop any comment end part
+    m = live_deps_string.match(dep_str)
+    dep_str = m.group(1)
 
-	# extract the dependencies
-	dependencies = dep_str.split()
-	
-	for dep in dependencies:
-		if valid_dep_string.match(dep) is None:
-			raise ParseException(pipeline_file,lineno,'expected a dependency, got: %s' % dep)
+    # extract the dependencies
+    dependencies = dep_str.split()
+    
+    for dep in dependencies:
+        if valid_dep_string.match(dep) is None:
+            raise ParseException(pipeline_file,lineno,'expected a dependency, got: %s' % dep)
 
-	lineno += 1
+    lineno += 1
 
-	# prepare to load the blocks
-	task_props = {}
-	blocks = []
+    # prepare to load the blocks
+    task_props = {}
+    blocks = []
 
-	# if we have a lang suffix, load the implicit block
-	if lang_suffix != '':
-		logger.debug('loading a simple task')
-		
-		block_lineno = lineno
-		lineno,content,content_linenos = read_block_content(lines,lineno,NO_INDENT)
-		
-		blocks.append(CodeBlock(lang_suffix,'',content,pipeline_file,block_lineno))
-	else:
-		# otherwise, load all the contents
-		lineno,task_props,blocks = read_task_contents(lines,pipeline_file,lineno)
+    # if we have a lang suffix, load the implicit block
+    if lang_suffix != '':
+        logger.debug('loading a simple task')
+        
+        block_lineno = lineno
+        lineno,content,content_linenos = read_block_content(lines,lineno,NO_INDENT)
+        
+        blocks.append(CodeBlock(lang_suffix,'',content,pipeline_file,block_lineno))
+    else:
+        # otherwise, load all the contents
+        lineno,task_props,blocks = read_task_contents(lines,pipeline_file,lineno)
 
-	return lineno,Task(task_name,is_markable,dependencies,task_props,blocks,pipeline_file,start_lineno)
+    return lineno,Task(task_name,is_markable,dependencies,task_props,blocks,pipeline_file,start_lineno)
 
 def read_task_contents(lines,pipeline_file,lineno):
-	#####
-	# setup the patterns for parsing the task contents
-	indention_pattern = re.compile('^(\s+)[^\s]')
-	var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
-	delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
-	
-	# these patterns need to be initialized once we know the indentation sequence
-	code_pattern = None 
-	export_pattern = None 
-	property_pattern = None
+    #####
+    # setup the patterns for parsing the task contents
+    indention_pattern = re.compile('^(\s+)[^\s]')
+    var_assignment_pattern = re.compile('^(%s)\s*=(.*)$' % VAR_PATTERN)
+    delete_var_pattern = re.compile('^unset\s+(%s)$' % VAR_PATTERN)
+    
+    # these patterns need to be initialized once we know the indentation sequence
+    code_pattern = None 
+    export_pattern = None 
+    property_pattern = None
 
-	#####
-	# load the content
-	task_props = {}
-	blocks = []
-	in_task = True	
-	in_comment_block = False
+    #####
+    # load the content
+    task_props = {}
+    blocks = []
+    in_task = True    
+    in_comment_block = False
 
-	im = find_indentation_match(lines,lineno,indention_pattern) 
-	logger.debug('match = %s' % im)
-	indent_seq = None
-	if im is not None:
-		# there's valid content
-		indent_seq = im.group(1)
-		logger.debug('indent_seq len = %d' % len(indent_seq))
-		code_pattern = re.compile('^%scode\.(\w+):(.*)$' % indent_seq)
-		export_pattern = re.compile('^%sexport:(.*)$' % indent_seq)
-		property_pattern = re.compile('^%s@([^\s]+)\s+(.*)$' % indent_seq)
-	else:
-		in_task = False
+    im = find_indentation_match(lines,lineno,indention_pattern) 
+    logger.debug('match = %s' % im)
+    indent_seq = None
+    if im is not None:
+        # there's valid content
+        indent_seq = im.group(1)
+        logger.debug('indent_seq len = %d' % len(indent_seq))
+        code_pattern = re.compile('^%scode\.(\w+):(.*)$' % indent_seq)
+        export_pattern = re.compile('^%sexport:(.*)$' % indent_seq)
+        property_pattern = re.compile('^%s@([^\s]+)\s+(.*)$' % indent_seq)
+    else:
+        in_task = False
 
-	while lineno < len(lines) and in_task:
-		cur_line = lines[lineno].rstrip()
+    while lineno < len(lines) and in_task:
+        cur_line = lines[lineno].rstrip()
 
-		if in_comment_block:
-			if not cur_line.startswith(indent_seq):
-				raise ParseException(pipeline_file,lineno,'all lines in a comment block must be indented')
-			lineno += 1
-			if cur_line.rstrip() == ('%s###' % indent_seq):
-				in_comment_block = False
-			continue
+        if in_comment_block:
+            if not cur_line.startswith(indent_seq):
+                raise ParseException(pipeline_file,lineno,'all lines in a comment block must be indented')
+            lineno += 1
+            if cur_line.rstrip() == ('%s###' % indent_seq):
+                in_comment_block = False
+            continue
 
-		mc = code_pattern.match(cur_line)
-		me = export_pattern.match(cur_line)
-		mp = property_pattern.match(cur_line)
+        mc = code_pattern.match(cur_line)
+        me = export_pattern.match(cur_line)
+        mp = property_pattern.match(cur_line)
 
-		if cur_line.startswith('%s###' % indent_seq):
-			# we're starting a multi-line comment block
-			in_comment_block = True
-			lineno += 1
-		if cur_line.startswith('%s#' % indent_seq) or len(cur_line.strip()) == 0:
-			lineno += 1
-		elif mc: ### code block starts here
-			lang = mc.group(1)
-			arg_str = mc.group(2)
-			logger.debug('found code block at line %d' % lineno)
-			block_lineno = lineno
-			lineno,content,content_linenos = read_block_content(lines,lineno+1,indent_seq)
+        if cur_line.startswith('%s###' % indent_seq):
+            # we're starting a multi-line comment block
+            in_comment_block = True
+            lineno += 1
+        if cur_line.startswith('%s#' % indent_seq) or len(cur_line.strip()) == 0:
+            lineno += 1
+        elif mc: ### code block starts here
+            lang = mc.group(1)
+            arg_str = mc.group(2)
+            logger.debug('found code block at line %d' % lineno)
+            block_lineno = lineno
+            lineno,content,content_linenos = read_block_content(lines,lineno+1,indent_seq)
 
-			blocks.append(CodeBlock(lang,arg_str,content,pipeline_file,block_lineno))
-		elif me: ### export block starts here
-			arg_str = me.group(1).strip()
-			logger.debug('found export block at line %d' % lineno)
-			export_lineno = lineno
+            blocks.append(CodeBlock(lang,arg_str,content,pipeline_file,block_lineno))
+        elif me: ### export block starts here
+            arg_str = me.group(1).strip()
+            logger.debug('found export block at line %d' % lineno)
+            export_lineno = lineno
 
-			if len(arg_str) > 0:
-				raise ParseException(pipeline_file,lineno,
-					'export block does not accept an argument string')
+            if len(arg_str) > 0:
+                raise ParseException(pipeline_file,lineno,
+                    'export block does not accept an argument string')
 
-			new_lineno,content,content_linenos = read_block_content(lines,lineno+1,indent_seq)
-			
-			# parse the content as variable assignments
-			statements = []
-			for ln,line in zip(content_linenos,content):
-				line = line.rstrip()
-				ma = var_assignment_pattern.match(line)
-				md = delete_var_pattern.match(line)
-				if ma:
-					statements.append(VariableAssignment(ma.group(1),ma.group(2),
-														pipeline_file,ln))
-				elif md:
-					statements.append(DeleteVariable(ma.group(1),pipeline_file,ln))
-				elif len(line) == 0:
-					pass
-				else:
-					raise ParseException(pipeline_file,ln,
-							'expected a variable assignment, got: %s' % line)
+            new_lineno,content,content_linenos = read_block_content(lines,lineno+1,indent_seq)
+            
+            # parse the content as variable assignments
+            statements = []
+            for ln,line in zip(content_linenos,content):
+                line = line.rstrip()
+                ma = var_assignment_pattern.match(line)
+                md = delete_var_pattern.match(line)
+                if ma:
+                    statements.append(VariableAssignment(ma.group(1),ma.group(2),
+                                                        pipeline_file,ln))
+                elif md:
+                    statements.append(DeleteVariable(ma.group(1),pipeline_file,ln))
+                elif len(line) == 0:
+                    pass
+                else:
+                    raise ParseException(pipeline_file,ln,
+                            'expected a variable assignment, got: %s' % line)
 
-			blocks.append(ExportBlock(statements,pipeline_file,export_lineno))
-			lineno = new_lineno
-		elif mp: ### task property line
-			logger.debug('found task property at line %d' % lineno)
-			prop_name = mp.group(1)
-			prop_value = mp.group(2)
-			logger.debug('property "%s" = %s' % (prop_name,prop_value))
-			task_props[prop_name] = prop_value
+            blocks.append(ExportBlock(statements,pipeline_file,export_lineno))
+            lineno = new_lineno
+        elif mp: ### task property line
+            logger.debug('found task property at line %d' % lineno)
+            prop_name = mp.group(1)
+            prop_value = mp.group(2)
+            logger.debug('property "%s" = %s' % (prop_name,prop_value))
+            task_props[prop_name] = prop_value
 
-			lineno += 1
-		else:
-			in_task = False	
+            lineno += 1
+        else:
+            in_task = False    
 
-	return lineno,task_props,blocks
+    return lineno,task_props,blocks
 
 
 def read_block_content(lines,lineno,indent_seq):
-	"""
-	Extract block content - begins with indent_seq + whatever the new intentation is
+    """
+    Extract block content - begins with indent_seq + whatever the new intentation is
 
-	Return: (next_lineno,content,content_linenos)
-	"""
-	indentation_pattern = re.compile('^(%s\s+)[^\s]' % indent_seq)
+    Return: (next_lineno,content,content_linenos)
+    """
+    indentation_pattern = re.compile('^(%s\s+)[^\s]' % indent_seq)
 
-	im = find_indentation_match(lines,lineno,indentation_pattern)
-	inner_indent_seq = None
-	if im is not None:
-		inner_indent_seq = im.group(1)
-	else:
-		# there's no content in this block
-		return lineno, [], []
+    im = find_indentation_match(lines,lineno,indentation_pattern)
+    inner_indent_seq = None
+    if im is not None:
+        inner_indent_seq = im.group(1)
+    else:
+        # there's no content in this block
+        return lineno, [], []
 
-	last_lineno = lineno
-	content_lines = []
-	content_linenos = []
-	while last_lineno < len(lines):
-		if lines[last_lineno].startswith(inner_indent_seq):
-			content_lines.append(lines[last_lineno])
-			content_linenos.append(last_lineno)
-		elif len(lines[last_lineno].strip()) == 0:
-			# empty lines should be added to the block
-			content_lines.append(inner_indent_seq)
-			content_linenos.append(last_lineno)
-		else:
-			break
-		last_lineno += 1
-	
-	il = len(inner_indent_seq)
-	return last_lineno,map(lambda x: x[il:].rstrip(),content_lines),content_linenos
+    last_lineno = lineno
+    content_lines = []
+    content_linenos = []
+    while last_lineno < len(lines):
+        if lines[last_lineno].startswith(inner_indent_seq):
+            content_lines.append(lines[last_lineno])
+            content_linenos.append(last_lineno)
+        elif len(lines[last_lineno].strip()) == 0:
+            # empty lines should be added to the block
+            content_lines.append(inner_indent_seq)
+            content_linenos.append(last_lineno)
+        else:
+            break
+        last_lineno += 1
+    
+    il = len(inner_indent_seq)
+    return last_lineno,[x[il:].rstrip() for x in content_lines],content_linenos
 
 variable_pattern = re.compile('([\w\d_]+)|(\{([\w\d]+\.)?[\w\d_]+?\})')
 SUPPORTED_BUILTIN_FUNCTIONS = ['','PLN']
 SUPPORTED_ESCAPABLE_CHARACTERS = ['$','\\']
 
 def expand_variables(x,context,cwd,pipelines,source_file,lineno,nested=False):
-	"""
-	This function will both parse variables in the 
-	string (assumed to be one line of text) and replace them
-	with their appropriate values given this context.
+    """
+    This function will both parse variables in the 
+    string (assumed to be one line of text) and replace them
+    with their appropriate values given this context.
 
-	ParseException is raised if syntax is bad.
-	UnknownVariableException is raised if variables or functions can't be resolved.
-	"""
-	
-	cpos = 0
-	
-	while cpos < len(x):
-		
-		# handle escaping special character
-		if x[cpos] == '\\':
-			if cpos == len(x)-1:
-				raise ParseException(source_file,lineno,'incomplete escape sequence at EOL')
+    ParseException is raised if syntax is bad.
+    UnknownVariableException is raised if variables or functions can't be resolved.
+    """
+    
+    cpos = 0
+    
+    while cpos < len(x):
+        
+        # handle escaping special character
+        if x[cpos] == '\\':
+            if cpos == len(x)-1:
+                raise ParseException(source_file,lineno,'incomplete escape sequence at EOL')
 
-			c = x[cpos+1]
-			
-			if c not in SUPPORTED_ESCAPABLE_CHARACTERS:
-				raise ParseException(source_file,lineno,'invalid escape sequence \\%s' % c)
-			replacement = c
-			pre_escape = x[:cpos]
-			post_escape = x[(cpos+2):]
-			x = pre_escape + replacement + post_escape
-			cpos = cpos+2
-			
-		elif x[cpos] == '$':
-			# variable started!
-			if cpos == len(x)-1:
-				raise ParseException(source_file,lineno,'incomplete variable reference')
+            c = x[cpos+1]
+            
+            if c not in SUPPORTED_ESCAPABLE_CHARACTERS:
+                raise ParseException(source_file,lineno,'invalid escape sequence \\%s' % c)
+            replacement = c
+            pre_escape = x[:cpos]
+            post_escape = x[(cpos+2):]
+            x = pre_escape + replacement + post_escape
+            cpos = cpos+2
+            
+        elif x[cpos] == '$':
+            # variable started!
+            if cpos == len(x)-1:
+                raise ParseException(source_file,lineno,'incomplete variable reference')
 
-			# get the variable name
-			m = variable_pattern.match(x[(cpos+1):])
-			if m is None:
-				# check if this is a shell call
-				if cpos < len(x)-1 and x[cpos+1] == '(':
-					varname = ''
-				else:
-					raise ParseException(source_file,lineno,'invalid variable reference')
-			else:
-				varname = None
-				
-				# this is a curly-brace-delimited variable
-				if m.group(1) is None:
-					varname = m.group(2)
+            # get the variable name
+            m = variable_pattern.match(x[(cpos+1):])
+            if m is None:
+                # check if this is a shell call
+                if cpos < len(x)-1 and x[cpos+1] == '(':
+                    varname = ''
+                else:
+                    raise ParseException(source_file,lineno,'invalid variable reference')
+            else:
+                varname = None
+                
+                # this is a curly-brace-delimited variable
+                if m.group(1) is None:
+                    varname = m.group(2)
 
-					# remove curly braces
-					varname = varname[1:-1]
-						
-					# remove the curlies from the string x
-					x = x[:(cpos+1)] + varname + x[(cpos+len(varname)+3):]
-				else: # not delimited by curly braces
-					varname = m.group(1)
+                    # remove curly braces
+                    varname = varname[1:-1]
+                        
+                    # remove the curlies from the string x
+                    x = x[:(cpos+1)] + varname + x[(cpos+len(varname)+3):]
+                else: # not delimited by curly braces
+                    varname = m.group(1)
 
-			# if this variable reference is actually a function
-			fxn_paren_pos = cpos+1+len(varname)
-			if fxn_paren_pos < (len(x)-1) and x[fxn_paren_pos] == '(':
-				fxn_argstart_pos = fxn_paren_pos + 1
-				# we only support two functions
-				if varname not in SUPPORTED_BUILTIN_FUNCTIONS:
-					raise UnknownVariableException(source_file,lineno,'invalid builtin function name: %s' % varname)
+            # if this variable reference is actually a function
+            fxn_paren_pos = cpos+1+len(varname)
+            if fxn_paren_pos < (len(x)-1) and x[fxn_paren_pos] == '(':
+                fxn_argstart_pos = fxn_paren_pos + 1
+                # we only support two functions
+                if varname not in SUPPORTED_BUILTIN_FUNCTIONS:
+                    raise UnknownVariableException(source_file,lineno,'invalid builtin function name: %s' % varname)
 
-				# process the rest of the string
-				expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,cwd,pipelines,source_file,lineno,nested=True)
+                # process the rest of the string
+                expanded_x_part,eofxn = expand_variables(x[fxn_argstart_pos:],context,cwd,pipelines,source_file,lineno,nested=True)
 
-				x = x[:fxn_argstart_pos] + expanded_x_part
-				eofxn = fxn_argstart_pos + eofxn
+                x = x[:fxn_argstart_pos] + expanded_x_part
+                eofxn = fxn_argstart_pos + eofxn
 
-				# extract arguments
-				args_str = x[fxn_argstart_pos:eofxn]
-				args = map(lambda x: x.strip(),args_str.split(','))
-				logger.debug('got fxn args: %s' % str(args))
+                # extract arguments
+                args_str = x[fxn_argstart_pos:eofxn]
+                args = [x.strip() for x in args_str.split(',')]
+                logger.debug('got fxn args: %s' % str(args))
 
-				# apply the function
-				ret_val = ''
-				if varname == '':
-					ret_val = subprocess.check_output(args_str,shell=True,cwd=cwd,env=get_total_context(context))
-					if ret_val[-1] == '\n':
-						ret_val = ret_val[:-1]
+                # apply the function
+                ret_val = ''
+                if varname == '':
+                    ret_val = subprocess.check_output(args_str,shell=True,cwd=cwd,
+                                                      env=get_total_context(context))
 
-					logger.debug('expanded shell fxn to: %s' % ret_val)
+                    # convert the bytes into a string
+                    ret_val = ret_val.decode()
 
-					if '\n' in ret_val:
-						raise Exception, 'inline shell functions cannot return strings containing newlines: %s' % ret_val
+                    if ret_val[-1] == '\n':
+                        ret_val = ret_val[:-1]
 
-				elif varname == 'PLN':
-					prefix = None
+                    logger.debug('expanded shell fxn to: %s' % ret_val)
 
-					if len(args) == 1:
-						prefix = context[PIPELINE_PREFIX_VARNAME]
-						fname = args[0]
-					elif len(args) == 2:
-						pln_name = args[0]
-						
-						if pln_name not in pipelines:
-							raise Exception, 'unable to find pipeline with alias "%s"' % pln_name
+                    if '\n' in ret_val:
+                        raise Exception('inline shell functions cannot return strings containing newlines: %s' % ret_val)
 
-						prefix = pipelines[pln_name].get_prefix()
-						logger.debug('PLN reference got prefix = %s' % prefix)
-						fname = args[1]
-					else:
-						# TODO: Add line number
-						raise Exception, 'too many arguments for $PLN(...) fxn'
+                elif varname == 'PLN':
+                    prefix = None
 
-					ret_val = '%s%s' % (prefix,fname)
+                    if len(args) == 1:
+                        prefix = context[PIPELINE_PREFIX_VARNAME]
+                        fname = args[0]
+                    elif len(args) == 2:
+                        pln_name = args[0]
+                        
+                        if pln_name not in pipelines:
+                            raise Exception('unable to find pipeline with alias "%s"' % pln_name)
 
-				# make the replacement
-				pre_fxn = x[:cpos]
-				post_fxn = x[(eofxn+1):]
-				x = pre_fxn + ret_val + post_fxn
-				cpos = len(pre_fxn) + len(ret_val)
+                        prefix = pipelines[pln_name].get_prefix()
+                        logger.debug('PLN reference got prefix = %s' % prefix)
+                        fname = args[1]
+                    else:
+                        # TODO: Add line number
+                        raise Exception('too many arguments for $PLN(...) fxn')
 
-			else:
-				replacement = ''
+                    ret_val = '%s%s' % (prefix,fname)
 
-				# figure out which context to use
-				var_context = context
-				if '.' in varname:
-					pln_name, varname = varname.split('.')
+                # make the replacement
+                pre_fxn = x[:cpos]
+                post_fxn = x[(eofxn+1):]
+                x = pre_fxn + ret_val + post_fxn
+                cpos = len(pre_fxn) + len(ret_val)
 
-					if pln_name not in pipelines:
-						raise UnknownVariableException(source_file,lineno,'pipeline %s is unknown' % pln_name)
-					else:
-						var_context = pipelines[pln_name].get_context()
+            else:
+                replacement = ''
 
-				if varname not in var_context:
-					raise UnknownVariableException(source_file,lineno,'variable %s does not exist' % varname)
+                # figure out which context to use
+                var_context = context
+                if '.' in varname:
+                    pln_name, varname = varname.split('.')
 
-				replacement = var_context[varname]	
-	
-				# make the replacement
-				pre_var = x[:cpos]
-				post_var = x[(cpos+1+len(varname)):]
-				x = pre_var + replacement + post_var
-				cpos = cpos+1+len(replacement)
-		
-		elif nested and x[cpos] == ')':
-			# We just found the end of a function (which we're nested inside of)
-			return x,cpos
+                    if pln_name not in pipelines:
+                        raise UnknownVariableException(source_file,lineno,'pipeline %s is unknown' % pln_name)
+                    else:
+                        var_context = pipelines[pln_name].get_context()
 
-		else:
-			cpos += 1
+                if varname not in var_context:
+                    raise UnknownVariableException(source_file,lineno,'variable %s does not exist' % varname)
 
-	# under normal circumstances, reaching the end of the string is what we want.
-	# but if we are nested, then we should find a parenthesis first.
-	if nested:
-		raise ParseException(source_file,lineno,'expected to find a ")", none found')
+                replacement = var_context[varname]    
+    
+                # make the replacement
+                pre_var = x[:cpos]
+                post_var = x[(cpos+1+len(varname)):]
+                x = pre_var + replacement + post_var
+                cpos = cpos+1+len(replacement)
+        
+        elif nested and x[cpos] == ')':
+            # We just found the end of a function (which we're nested inside of)
+            return x,cpos
 
-	return x
+        else:
+            cpos += 1
+
+    # under normal circumstances, reaching the end of the string is what we want.
+    # but if we are nested, then we should find a parenthesis first.
+    if nested:
+        raise ParseException(source_file,lineno,'expected to find a ")", none found')
+
+    return x

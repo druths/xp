@@ -1,6 +1,7 @@
 
 test1:
 	export:
+		PYHMR_PYTHON_CMD=python3
 		PYHMR_STREAMING_API=blargh
 		PYHMR_INPUT=foo
 		PYHMR_OUTPUT=bar
@@ -13,7 +14,7 @@ test1:
 			for line in stream:
 				words = line.strip().split()
 				for w in words:
-					print '%s\\t1' % w
+					print('%s\\t1' % w)
 
 		def reduce(stream):
 			word_count = {}
@@ -24,7 +25,7 @@ test1:
 				word_count[word] = word_count.get(word,0) + count
 
 			for word,count in word_count.items():
-				print '%s\\t%d' % (word,count)
+				print('%s\\t%d' % (word,count))
 
 			# done
 

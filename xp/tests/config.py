@@ -23,21 +23,21 @@ import time
 BASE_PATH = os.path.dirname(__file__)
 
 def get_complete_filename(fname):
-	return os.path.join(BASE_PATH,'pipelines',fname)
+    return os.path.join(BASE_PATH,'pipelines',fname)
 
 class AbstractionTestCase(unittest.TestCase):
-	
-	def test_run_abstract_pipeline(self):
-		p = get_pipeline(get_complete_filename('abs_pipeline.axp'),default_prefix=USE_FILE_PREFIX)
-		p.unmark_all_tasks(recur=True)
-		try:
-			p.run()
-			self.fail()
-		except Exception, e:
-			print e
-
-	def test_run_non_abstract_pipeline(self):
-		p = get_pipeline(get_complete_filename('nonabs_pipeline.xp'),default_prefix=USE_FILE_PREFIX)
-		p.unmark_all_tasks(recur=True)
-		p.run()
+    
+    def test_run_abstract_pipeline(self):
+        p = get_pipeline(get_complete_filename('abs_pipeline.axp'),default_prefix=USE_FILE_PREFIX)
+        p.unmark_all_tasks(recur=True)
+        try:
+            p.run()
+            self.fail()
+        except Exception as e:
+            print(e)
+    
+    def test_run_non_abstract_pipeline(self):
+        p = get_pipeline(get_complete_filename('nonabs_pipeline.xp'),default_prefix=USE_FILE_PREFIX)
+        p.unmark_all_tasks(recur=True)
+        p.run()
 
