@@ -1,40 +1,41 @@
-from distutils.core import setup	
+from distutils.core import setup        
 import os.path
 import sys
 
 setup(
-	name = 'xp',
-	version = '1.1',
-	packages = ['xp','xp.tests','xp.tests.pipelines','xp.kernels'],
-	package_data = {'xp.tests.pipelines' : ['*'] },
+    name='xp',
+    version='2.0',
+    packages=['xp','xp.tests','xp.tests.pipelines','xp.kernels'],
+    package_data={'xp.tests.pipelines':['*']},
 
-	scripts = ['scripts/xp'],
+    entry_points={
+        'console_scripts': ['xp=xp.app:main'],
+    },
+    # # dependencies
 
-	# # dependencies
+    # # testing suite
+    #test_suite='xp.test',
 
-	# # testing suite
-	#test_suite = 'xp.test',
+    # # project metadata
+    author='Derek Ruths',
+    author_email='druths@networkdynamics.org',
+    description='xp is a framework for building and executing computing pipelines',
+    license='Apache',
+    url='https://github.com/druths/xp',
+    keywords=['data science','research','build','automation'],
+    classifiers=[
+            'Development Status :: 5 - Production/Stable',
 
-	# # project metadata
-	author = 'Derek Ruths',
-	author_email = 'druths@networkdynamics.org',
-	description = 'xp is a framework for building and executing computing pipelines',
-	license = 'Apache',
-	url = 'https://github.com/druths/xp',
-	keywords = ['data science','research','build','automation'],
-	classifiers=[
-		'Development Status :: 5 - Production/Stable',
+            'Environment :: Console',
 
-		'Environment :: Console',
+            'Intended Audience :: Science/Research',
+            'Intended Audience :: Information Technology',
 
-		'Intended Audience :: Science/Research',
-		'Intended Audience :: Information Technology',
+            'Topic :: Scientific/Engineering',
+            'Topic :: Scientific/Engineering :: Information Analysis',
+            'Topic :: Utilities',
 
-		'Topic :: Scientific/Engineering',
-		'Topic :: Scientific/Engineering :: Information Analysis',
-		'Topic :: Utilities',
+            'License :: OSI Approved :: Apache Software License',
 
-		'License :: OSI Approved :: Apache Software License',
-
-		'Programming Language :: Python :: 2.7']
+            'Programming Language :: Python :: 3.6']
 )
